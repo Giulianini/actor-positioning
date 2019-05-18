@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+    id 'scala'
+}
+
+group 'pcd-1819'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    //JAVA LIBS
+    implementation 'log4j:log4j:1.2.17'
+
+    //SCALA LIBS
+    implementation 'org.scalafx:scalafx_2.11.0-SNAPSHOT:8.0.0-R4'
+
+    //JAVAFX
+    implementation 'com.jfoenix:jfoenix:8.0.8' // Java 8
+    implementation 'org.kordamp.ikonli:ikonli-core:1.7.0'
+    implementation 'org.kordamp.ikonli:ikonli-javafx:1.7.0'
+    implementation 'org.kordamp.ikonli:ikonli-material-pack:1.7.0'
+    implementation 'eu.hansolo.enzo:Enzo:0.3.6'
+    //SCALA LANG
+    implementation 'org.scala-lang:scala-library:2.11.12'
+    testImplementation 'org.scala-lang:scala-library:2.11.1'
+    //TESTING
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.scalatest:scalatest_2.11:3.0.0'
+    //EXTRA
+    zinc 'com.typesafe.zinc:zinc:0.3.9'
+}
+
