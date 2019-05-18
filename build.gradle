@@ -3,7 +3,6 @@ plugins {
     id 'scala'
     id 'application'
     id 'pmd'
-    id 'findbugs'
     id 'checkstyle'
     id 'project-report'
     id 'jacoco'
@@ -51,16 +50,30 @@ jar {
 
 checkstyle {
     toolVersion = '8.0'
-    configFile = file('../config/checkstyle/checkstyle.xml')
+    configFile = file('config/checkstyle/checkstyle.xml')
 }
 
-findbugs {
+pmd {
     ignoreFailures = true
-    sourceSets = [sourceSets.main]
-    effort = "max"
+    ruleSetConfig = resources.text.fromFile("config/pmd/ruleset.xml")
 }
 
-pmdMain {
-    ignoreFailures = true
-    ruleSetConfig = resources.text.fromFile("../config/pmd/ruleset.xml")
+sourceSets {
+    main {
+        scala {
+            srcDirs = ['src/main/scala']
+        }
+        java {
+            srcDirs = ['src/main/java']
+        }
+    }
+    test {
+        scala {
+            srcDirs = ['test/main/scala']
+        }
+        java {
+            srcDirs = ['test/main/java']
+        }
+    }
 }
+
