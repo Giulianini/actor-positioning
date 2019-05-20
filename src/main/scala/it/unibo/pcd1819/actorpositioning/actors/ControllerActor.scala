@@ -1,32 +1,45 @@
 package it.unibo.pcd1819.actorpositioning.actors
 
-import akka.actor.{Actor, ActorLogging, Props}
-import it.unibo.pcd1819.actorpositioning.actors.ControllerActor.{Add, Init, Remove, Start}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import it.unibo.pcd1819.actorpositioning.actors.ControllerActor._
 
 class ControllerActor extends Actor with ActorLogging{
+
+    private var view : ActorRef = _
+    private var environment : ActorRef = _
+
     override def receive: Receive = {
         case Init =>
-            context actorOf(ViewActor props, "view")
-            context actorOf(EnvironmentActor props, "environment")
+            view = context actorOf(ViewActor props, "view")
+            environment = context actorOf(EnvironmentActor props, "environment")
             context become idle
         case _ => ???
 
     }
 
     private def idle: Receive = {
-        case Start(n) =>
-            context actorOf(EnvironmentActor props(n/*, Constants.radius*/), "environment")
+        case Start =>
             context become running
-        case Add(x, y) => ???
-        case Remove(x, y) => ???
-
-
+        case Generate(n) =>
+            environment ! EnvironmentActor.Generate(n)
+        case Add(x, y) =>
+            environment ! EnvironmentActor.Add(x, y)
+        case Remove(x, y) =>
+            environment ! EnvironmentActor.Remove(x, y)
         case _ => ???
 
     }
 
     private def running: Receive = {
-
+        case Add(x, y) =>
+            environment ! EnvironmentActor.Add(x, y)
+        case Remove(x, y) =>
+            environment ! EnvironmentActor.Remove(x, y)
+        case Pause =>
+            context become paused
+        case Stop
+            //TODO: more stuff
+            context become idle
         case _ => ???
     }
 }
@@ -34,10 +47,11 @@ class ControllerActor extends Actor with ActorLogging{
 object ControllerActor {
     def props = Props(new ControllerActor())
 
-    case class Start(numberOfParticles: Int)
+    case class Generate(numberOfParticles: Int)
     case class Add(x: Int, y: Int)
     case class Remove(x: Int, y:Int)
 
+    case object Start
     case object Pause
     case object Resume
     case object Stop
