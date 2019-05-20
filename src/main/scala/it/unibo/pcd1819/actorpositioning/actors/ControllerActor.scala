@@ -17,5 +17,4 @@ object ControllerActor {
     case object Resume
     case object Stop
     case object Step
-
 }

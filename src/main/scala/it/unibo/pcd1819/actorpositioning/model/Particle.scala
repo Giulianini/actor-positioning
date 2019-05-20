@@ -18,7 +18,7 @@ case class Particle(var position: Vector2D, mass: Double, charge: Double) {
         this.force = this.force + appliedForce
     }
 
-    def commitMove(): Unit = {
+    def commitForce(): Unit = {
         val acceleration = this.force * (1 / this.mass)
         this.position = this.position + this.velocity * Constants.timeStep
         this.velocity = this.velocity + acceleration * Constants.timeStep
