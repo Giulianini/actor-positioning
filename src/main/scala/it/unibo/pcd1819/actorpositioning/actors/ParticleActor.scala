@@ -12,7 +12,7 @@ class ParticleActor(id: Int) extends Actor with ActorLogging {
 
     private def simulationBehaviour: Receive = {
         case Step =>
-            log debug "Received step command"
+            //log debug "Received step command"
             context.actorSelection("../*") ! ParticleInfo(this.particle, this.id)
         case ParticleInfo(p, id) if id != this.id =>
             this.particle applyForceFrom p

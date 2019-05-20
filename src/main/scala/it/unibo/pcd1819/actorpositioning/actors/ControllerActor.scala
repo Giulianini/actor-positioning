@@ -19,6 +19,7 @@ class ControllerActor extends Actor with ActorLogging{
 
     private def idle: Receive = {
         case Start =>
+            environment ! EnvironmentActor.Start(5, Constants.radius)
             context become running
         case Generate(n) =>
             environment ! EnvironmentActor.Generate(n)
@@ -35,10 +36,10 @@ class ControllerActor extends Actor with ActorLogging{
             environment ! EnvironmentActor.Add(x, y)
         case Remove(x, y) =>
             environment ! EnvironmentActor.Remove(x, y)
-        case Pause =>
-            context become paused
-        case Stop
-            //TODO: more stuff
+        case Step =>
+            environment ! EnvironmentActor.Step
+        case Stop =>
+            environment ! EnvironmentActor.Stop
             context become idle
         case _ => ???
     }

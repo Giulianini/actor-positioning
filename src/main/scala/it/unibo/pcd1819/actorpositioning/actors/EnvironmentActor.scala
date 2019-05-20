@@ -10,7 +10,7 @@ class EnvironmentActor extends Actor with ActorLogging {
 
     private def simulationBehaviour: Receive = {
         case Step =>
-            log debug "Received step command"
+            //log debug "Received step command"
             this.particles foreach (_ ! ParticleActor.Step)
         case ParticleInfo(p, id) => this.particles foreach (_ ! ParticleActor.ParticleInfo(p, id))
         case Stop => context unbecome()
@@ -28,6 +28,9 @@ object EnvironmentActor {
     val basePath = "particle-master"
 
     case class Start(particles: Int, within: Double)
+    case class Add(x: Int, y: Int)
+    case class Remove(x: Int, y: Int)
+    case class Generate(n: Int)
     case object Step
     case object Stop
     case class ParticleInfo(particle: Particle, id: Int)
