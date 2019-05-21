@@ -1,6 +1,7 @@
 package it.unibo.pcd1819.actorpositioning.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
+import it.unibo.pcd1819.actorpositioning.model.Environment
 
 class ViewActor extends Actor with ActorLogging{
     override def receive: Receive = {
@@ -12,5 +13,5 @@ class ViewActor extends Actor with ActorLogging{
 object ViewActor {
     def props = Props(new ViewActor())
 
-    //  case class Environment()
+    final case class Publish(env: Environment)
 }

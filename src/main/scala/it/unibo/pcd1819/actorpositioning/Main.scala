@@ -17,7 +17,6 @@ object Main extends App {
     system.eventStream.subscribe(system.actorOf(Props(classOf[DeadLetterListener])), classOf[DeadLetter])
 
     val controller = system actorOf(ControllerActor props, "controller")
-    controller ! ControllerActor.Init
     controller ! ControllerActor.Start
 
     import scala.concurrent.duration._
