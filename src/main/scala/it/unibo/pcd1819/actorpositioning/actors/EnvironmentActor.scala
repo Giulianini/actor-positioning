@@ -6,14 +6,21 @@ import it.unibo.pcd1819.actorpositioning.model.Particle
 
 class EnvironmentActor extends Actor with ActorLogging {
 
-    var particles: Seq[ActorRef] = List()
+    private var workerRefs: Seq[ActorRef] = Seq()
+    private var particles: Seq[Particle] = Seq()
 
     private def simulationBehaviour: Receive = {
         case _ =>
     }
 
     override def receive: Receive = {
-        case _ =>
+        case Start =>
+            log debug "Starting simulation..."
+            context become simulationBehaviour
+        case Generate(n, range) =>
+        case Add(x, y) =>
+        case Remove(id) =>
+        case ParticleFactoryActor.NewParticles(ps) =>
     }
 }
 
@@ -29,7 +36,7 @@ object EnvironmentActor {
     case object Start extends Input
     case object Step extends Input //expecting Result(Environment)
     case object Stop extends Input
-    final case class Generate(n: Int, within: Double) extends Input //expecting Result(Environment
+    final case class Generate(n: Int, range: Double) extends Input //expecting Result(Environment
     final case class Add(x: Int, y: Int) extends Input
     final case class Remove(p: Particle) extends Input
     final case class BulkAdd(s: Seq[(Int, Int)]) extends Input
