@@ -27,8 +27,8 @@ case class Particle(var position: Vector2D, mass: Double, charge: Double)(val id
 }
 
 object Particle {
-    def random(within: Double, id: Int): Particle = {
-        val randomPosition = Vector2D.random(within)
+    def random(range: Double, id: Int): Particle = {
+        val randomPosition = Vector2D.random(range)
         val randomMass = Random.nextDouble()
         val randomCharge = Random.nextDouble()
         Particle(randomPosition, randomMass, randomCharge)(id)
