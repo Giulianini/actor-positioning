@@ -11,7 +11,7 @@ case class Particle(var position: Vector2D, mass: Double, charge: Double)(val id
     var velocity: Vector2D = Vector2D()
     var force: Vector2D = Vector2D()
 
-    def applyForceFrom(that: Particle): Unit = {
+    def applyForceFrom(that: Particle): Unit = { // TODO make this #&$! immutable for the love of god
         val distance = position distanceFrom that.position
         val distanceNorm = distance.norm3
         val appliedForce = distance * ((this.charge * that.charge * Constants.universal) / distanceNorm)
