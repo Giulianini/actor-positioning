@@ -1,25 +1,38 @@
 package it.unibo.pcd1819.actorpositioning.view.screens
 
-import javafx.application.Platform.runLater
+import com.jfoenix.controls.{JFXComboBox, JFXSlider}
+import com.sun.javafx.application.PlatformImpl
+import it.unibo.pcd1819.actorpositioning.view.HOME
+import it.unibo.pcd1819.actorpositioning.view.utilities.ViewUtilities
+import javafx.application.Platform
 import javafx.fxml.FXML
-import javafx.scene.layout.AnchorPane
+import javafx.scene.Scene
+import javafx.stage.Stage
+import scalafx.scene.layout.AnchorPane
 
-class MainScreenView {
+trait View {
+}
+
+case class MainScreenView() extends View {
   @FXML
-  private var mainBorder = null
+  var mainBorder: AnchorPane = _
+  mainBorder = ViewUtilities.loadFxml(this, HOME).asInstanceOf[AnchorPane]
+
   @FXML
-  private val labelExecutionTime = null
-  @FXML
-  private val sliderWorkers = null
-  @FXML
-  private val comboBoxOptimize = null
-  @FXML
-  private val comboBoxShape = null
-  MainScreenView() {
-    runLater(() => this.mainBorder = ViewUtilities.loadFxml(this, FXMLScreens.HOME).asInstanceOf[AnchorPane])
+  def initialize: Unit = {
+    val stage = new Stage
+    val scene = new Scene(this.mainBorder)
+    stage.setScene(scene)
+    ViewUtilities.chargeSceneSheets(scene)
+    stage.show()
   }
 }
 
 object MainScreenView {
   def apply: MainScreenView = new MainScreenView()
+}
+
+object Main extends App {
+  PlatformImpl.startup(() => {})
+  Platform.runLater(() => new MainScreenView())
 }

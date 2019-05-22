@@ -1,5 +1,4 @@
 plugins {
-    id 'java'
     id 'scala'
     id 'application'
     id 'pmd'
@@ -20,11 +19,14 @@ repositories {
     jcenter()
 }
 
+configurations {
+    scalaCompilerPlugin
+}
+
 dependencies {
     //JAVA LIBS
     implementation 'log4j:log4j:1.2.17'
     //SCALA LIBS
-    implementation 'org.scalafx:scalafx_2.11.0-SNAPSHOT:8.0.0-R4'
     //JAVAFX
     implementation 'com.jfoenix:jfoenix:8.0.8' // Java 8
     implementation 'org.kordamp.ikonli:ikonli-core:1.7.0'
@@ -77,5 +79,28 @@ sourceSets {
             srcDirs = ['test/main/java']
         }
     }
+}
+
+tasks.withType(ScalaCompile){
+    // Map plugin jars to -Xplugin parameter
+    List<String> parameters =
+            configurations.scalaCompilerPlugin.files.collect {
+                '-Xplugin:'+ it.absolutePath
+            }
+
+    // Add existing parameters
+    List<String> existingParameters = scalaCompileOptions.additionalParameters
+    if (existingParameters) {
+        parameters.addAll(existingParameters)
+    }
+
+    // Add whatever flags you typically add
+    parameters += [
+            '-language:implicitConversions',
+            '-language:higherKinds'
+    ]
+
+    // Finally set the additionalParameters
+    scalaCompileOptions.additionalParameters = parameters
 }
 
