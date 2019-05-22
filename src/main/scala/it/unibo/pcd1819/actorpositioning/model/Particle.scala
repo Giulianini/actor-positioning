@@ -7,7 +7,7 @@ object Constants {
     val timeStep: Double = 1.0
 }
 
-case class Particle(var position: Vector2D, mass: Double, charge: Double) {
+case class Particle(var position: Vector2D, mass: Double, charge: Double)(val id: Int) {
     var velocity: Vector2D = Vector2D()
     var force: Vector2D = Vector2D()
 
@@ -27,11 +27,11 @@ case class Particle(var position: Vector2D, mass: Double, charge: Double) {
 }
 
 object Particle {
-    def random(within: Double): Particle = {
+    def random(within: Double, id: Int): Particle = {
         val randomPosition = Vector2D.random(within)
         val randomMass = Random.nextDouble()
         val randomCharge = Random.nextDouble()
-        Particle(randomPosition, randomMass, randomCharge)
+        Particle(randomPosition, randomMass, randomCharge)(id)
     }
 }
 

@@ -9,18 +9,11 @@ class EnvironmentActor extends Actor with ActorLogging {
     var particles: Seq[ActorRef] = List()
 
     private def simulationBehaviour: Receive = {
-        case Step =>
-            //log debug "Received step command"
-            this.particles foreach (_ ! ParticleActor.Step)
-        case ParticleInfo(p, id) => this.particles foreach (_ ! ParticleActor.ParticleInfo(p, id))
-        case Stop => context unbecome()
+        case _ =>
     }
 
     override def receive: Receive = {
-        case Start(particleAmount, range) =>
-            this.particles = 0 until particleAmount map (context actorOf ParticleActor.props(_))
-            this.particles foreach (_ ! ParticleActor.Start(range, particleAmount))
-            context become simulationBehaviour
+        case _ =>
     }
 }
 
