@@ -12,7 +12,7 @@ version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
-mainClassName = 'Main'
+mainClassName = 'it.unibo.pcd1819.actorpositioning.view.screens.Main'
 
 repositories {
     mavenCentral()

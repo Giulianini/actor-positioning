@@ -5,4 +5,4 @@ sealed abstract class FXMLScreens (
   val cssPath: String
 ){}
 case object HOME extends FXMLScreens("/screens/MainScreen.fxml", "/sheets/MainScreen.css")
-case object POPUP extends FXMLScreens("/screens/PopupScreen.fxml", "/sheets/MainScreen.css")
+case object POPUP_GUI extends FXMLScreens("/screens/PopupScreen.fxml", "/sheets/MainScreen.css")

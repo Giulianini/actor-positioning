@@ -14,10 +14,6 @@
                 <JFXSlider fx:id="sliderParticles" blockIncrement="1.0" indicatorPosition="RIGHT" majorTickUnit="1.0"
                            min="1.0" max="1000" minorTickCount="0" showTickLabels="true" snapToTicks="true"
                            value="50.0"/>
-                <Label text="Worker Number"/>
-                <JFXSlider fx:id="sliderWorkers" blockIncrement="1.0" indicatorPosition="RIGHT" majorTickUnit="1.0"
-                           max="20.0" min="1.0" minorTickCount="0" showTickLabels="true" snapToTicks="true"
-                           value="1.0"/>
                 <Label text="Iteration Number (X 100)"/>
                 <JFXSlider fx:id="sliderIteration" indicatorPosition="RIGHT" majorTickUnit="1.0" min="1.0" max="1000"
                            minorTickCount="0" showTickLabels="true" snapToTicks="true" value="200.0"/>
