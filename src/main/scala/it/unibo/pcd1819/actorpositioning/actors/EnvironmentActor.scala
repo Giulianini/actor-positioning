@@ -37,8 +37,8 @@ object EnvironmentActor {
     case object Step extends Input //expecting Result(Environment)
     case object Stop extends Input
     final case class Generate(n: Int, within: Double) extends Input //expecting Result(Environment
-    final case class Add(x: Int, y: Int) extends Input
+    final case class Add(x: Double, y: Double) extends Input
     final case class Remove(p: Particle) extends Input
-    final case class BulkAdd(s: Seq[(Int, Int)]) extends Input
+    final case class BulkAdd(s: Seq[(Double, Double)]) extends Input
     final case class BulkRemove(S: Seq[Particle]) extends Input
 }
