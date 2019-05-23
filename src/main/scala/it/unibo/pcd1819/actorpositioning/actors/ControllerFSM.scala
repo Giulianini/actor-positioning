@@ -6,10 +6,10 @@ import it.unibo.pcd1819.actorpositioning.model.{Environment, Particle}
 
 object ControllerFSM {
   sealed trait State
-  final object Pit extends State
-  final object Idle extends State
-  final object Running extends State
-  final object Paused extends State
+  final case object Pit extends State
+  final case object Idle extends State
+  final case object Running extends State
+  final case object Paused extends State
 
   sealed trait Data
   final case object NoData extends Data
