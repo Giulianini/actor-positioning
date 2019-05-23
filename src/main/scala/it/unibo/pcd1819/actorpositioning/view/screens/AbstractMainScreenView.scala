@@ -1,5 +1,4 @@
 package it.unibo.pcd1819.actorpositioning.view.screens
-import akka.actor.ActorRef
 import com.jfoenix.controls.{JFXButton, JFXComboBox, JFXPopup, JFXSlider, JFXToolbar}
 import it.unibo.pcd1819.actorpositioning.view.FXMLScreens.POPUP_GUI
 import it.unibo.pcd1819.actorpositioning.view.utilities.{JavafxEnums, ViewUtilities}
@@ -16,7 +15,7 @@ trait View {
   def prepareSimulation(): Unit
 }
 
-private[screens] abstract class  AbstractMainScreenView extends View {
+abstract class  AbstractMainScreenView extends View {
   protected var popupScreenView: PopupScreenView = new PopupScreenView
   private var popup: JFXPopup = _
   private val startIcon = ViewUtilities iconSetter(Material.PLAY_ARROW, JavafxEnums.BIG_ICON)
