@@ -19,8 +19,8 @@ object ParticleDrawingUtils {
       case CIRCLE => new Circle(radius, color)
     }
     shape.setSmooth(true)
-    shape.setTranslateX(particle.position x)
-    shape.setTranslateY(particle.position y)
+    shape.setTranslateX(particle.position.x + environmentSize.x * 0.5)
+    shape.setTranslateY(particle.position.y + environmentSize.y * 0.5)
     shape
   }
 }

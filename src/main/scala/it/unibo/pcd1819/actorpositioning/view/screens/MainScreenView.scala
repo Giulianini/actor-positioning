@@ -61,7 +61,6 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
       particles.foreach(p =>this.getParticles.getChildren.add(ParticleDrawingUtils.
           createParticleShapes(p, RECTANGULAR, Vector2D(this.mainBorder.getWidth, this.mainBorder.getHeight))))
     })
-    LOG.debug(this.stack3D.getWidth)
   }
   override def updateParticlesPositions(particlesPosition: util.List[Particle]): Unit = LOG.debug("UPDATE PARTICLES")
   override def updateExecutionTime(millis: Long): Unit = runLater(() => labelExecutionTime.setText(millis + " "))
