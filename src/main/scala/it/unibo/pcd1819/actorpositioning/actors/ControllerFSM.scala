@@ -12,88 +12,103 @@ object ControllerFSM {
   final case object Paused extends State
 
   sealed trait Data
-  final case object NoData extends Data
-  final case class Request(i: Input) extends Data
+  final case class Request(s: Settings, i: Input) extends Data
 
   sealed trait Input
+  final case object NoInput extends Input
   final case object Start extends Input
   final case object Pause extends Input
   final case object Stop extends Input
   final case object Step extends Input
-  final case class Generate(n: Int) extends Input
+  final case object GenerateEnvironment extends Input
+  final case class UpdateParticles(n: Int) extends Input
+  final case class UpdateIterations(n: Int) extends Input
+  final case class UpdateTimeStep(n: Int) extends Input
   final case class Add(x: Double, y: Double) extends Input
   final case class Remove(p: Particle) extends Input
-//  final case class Result(e: Seq[(Int, Int)]) extends Input
   final case class Result(e: Environment) extends Input
 
+  private final case class Settings(particles: Int, iterations: Int, timeStep: Int)
   def props = Props(classOf[ControllerFSM])
-}
-
-object Constants {
-  val radius : Double = 100.0
 }
 
 class ControllerFSM extends FSM[State, Data] with ActorLogging{
 
-  private val environment = context actorOf(EnvironmentActor props, "environment")
-  private val view = context actorOf(ViewActor props, "view")
-  startWith(Idle, NoData)
+  private val environment = context actorOf(EnvironmentActor.props, "environment")
+  private val view = context actorOf(ViewActor.props, "view")
+  import DefaultConstants._
+  private val settings = Settings(defaultParticles, defaultIterations, defaultTimeStep)
+
+  startWith(Idle, Request(settings, NoInput))
 
   when(Idle) {
-    case Event(Start, _) => goto(Running).using(NoData);
-    case Event(Step, _) => goto(Paused).using(NoData)
+    case Event(Start, _) => goto(Running)
+    case Event(Step, _) => goto(Paused)
     case Event(Pause, _) => goto(Pit)
     case Event(Stop, _) => goto(Pit)
-    case Event(Generate(n), _) => goto(Idle).using(Request(Generate(n)))
-    case Event(Add(x, y), _) => goto(Idle).using(Request(Add(x, y)))
-    case Event(Remove(p), _) => goto(Idle).using(Request(Remove(p)))
-    case Event(Result(e), _) => goto(Idle).using(Request(Result(e)))
+    case Event(GenerateEnvironment, Request(s:_, _)) => goto(Idle).using(Request(s, GenerateEnvironment))
+    case Event(UpdateParticles(n), Request(s:_, _)) => goto(Idle).using(Request(s.copy(particles = n), UpdateParticles(n)))
+    case Event(UpdateIterations(n), Request(s:_, _)) => goto(Idle).using(Request(s.copy(iterations = n), UpdateIterations(n)))
+    case Event(UpdateTimeStep(n), Request(s:_, _)) => goto(Idle).using(Request(s.copy(timeStep = n), UpdateTimeStep(n)))
+    case Event(Add(x, y), Request(s:_, _)) => goto(Idle).using(Request(s, Add(x, y)))
+    case Event(Remove(p), Request(s:_, _)) => goto(Idle).using(Request(s, Remove(p)))
+    case Event(Result(e), Request(s:_, _)) => goto(Idle).using(Request(s, Result(e)))
   }
 
   when(Running) {
     case Event(Start, _) => goto(Pit)
-    case Event(Step, _) => goto(Running).using(Request(Step))
-    case Event(Pause, _) => goto(Paused).using(NoData)
-    case Event(Stop, _) => goto(Idle).using(NoData)
-    case Event(Generate(_), _) => goto(Pit)
-    case Event(Add(x, y), _) => goto(Running).using(Request(Add(x, y)))
-    case Event(Remove(p), _) => goto(Running).using(Request(Remove(p)))
-    case Event(Result(e), _) => goto(Running).using(Request(Result(e)))
+    case Event(Step, Request(s:_, _)) => goto(Running).using(Request(s, Step))
+    case Event(Pause, _) => goto(Paused)
+    case Event(Stop, _) => goto(Idle)
+    case Event(GenerateEnvironment, _) => goto(Pit)
+    case Event(UpdateIterations(_), _) => goto(Pit)
+    case Event(UpdateTimeStep(_), _) => goto(Pit)
+    case Event(Add(x, y), Request(s:_, _)) => goto(Running).using(Request(s, Add(x, y)))
+    case Event(Remove(p), Request(s:_, _)) => goto(Running).using(Request(s, Remove(p)))
+    case Event(Result(e), Request(s:_, _)) => goto(Running).using(Request(s, Result(e)))
   }
 
   when(Paused) {
-    case Event(Start, _) => goto(Running).using(NoData)
-    case Event(Step, _) => goto(Paused).using(Request(Step))
+    case Event(Start, _) => goto(Running)
+    case Event(Step, _) => goto(Paused)
     case Event(Pause, _) => goto(Pit)
-    case Event(Stop, _) => goto(Idle).using(NoData)
-    case Event(Generate(_), _) => goto(Pit)
-    case Event(Add(x, y), _) => goto(Paused).using(Request(Add(x,y)))
-    case Event(Remove(p), _) => goto(Paused).using(Request(Remove(p)))
-    case Event(Result(e), _) => goto(Paused).using(Request(Result(e)))
+    case Event(Stop, _) => goto(Idle)
+    case Event(GenerateEnvironment, _) => goto(Pit)
+    case Event(UpdateIterations(_), _) => goto(Pit)
+    case Event(UpdateTimeStep(_), _) => goto(Pit)
+    case Event(Add(x, y), Request(s:_, _)) => goto(Paused).using(Request(s, Add(x,y)))
+    case Event(Remove(p), Request(s:_, _)) => goto(Paused).using(Request(s, Remove(p)))
+    case Event(Result(e), Request(s:_, _)) => goto(Paused).using(Request(s, Result(e)))
   }
 
   when(Pit) {
-    case _ => stay()
+    case _ => goto(Pit)
   }
 
   onTransition {
-    case _ -> Pit => log debug "Pit"
+    case Pit -> Pit => log debug "You are in the Pit"
+    case _ -> Pit => log debug "This action brings to the Pit"
 
     case Idle -> Idle =>
       nextStateData match {
-        case Request(Generate(n)) =>
-          log debug s"Idle asked to generate $n particles"
-          environment ! EnvironmentActor.Generate(n, Constants.radius)
-        case Request(Add(x, y)) =>
+        case Request(s:_, GenerateEnvironment) =>
+          log debug s"Idle asked to generate environment"
+          environment ! EnvironmentActor.Generate(s.particles, EnvironmentConstants.radius)
+        case Request(_, Add(x, y)) =>
           log debug s"Idle asked for creation of $x, $y"
           environment ! EnvironmentActor.Add(x, y)
-        case Request(Remove(p)) =>
+        case Request(_, Remove(p)) =>
           log debug s"Idle asked for removal of $p"
           environment ! EnvironmentActor.Remove(p)
-        case Request(Result(e)) =>
+        case Request(_, Result(e)) =>
           log debug s"Idle asked to publish $e"
           view ! ViewActor.Publish(e)
-        case NoData => log debug "Initializing FSM"
+        case Request(_, UpdateTimeStep(n)) =>
+          log debug s"Idle updated timeStep with $n"
+        case Request(_, UpdateIterations(n)) =>
+          log debug s"Idle updated iterations with $n"
+        case Request(_, NoInput) =>
+          log debug "Initializing FSM"
         case _ => log debug "Report this message ASAP"
       }
     case Idle -> Running =>
@@ -105,13 +120,17 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging{
 
     case Running -> Running =>
       nextStateData match {
-        case Request(Add(x, y)) =>
+        case Request(_, Add(x, y)) =>
           log debug s"Running asked for creation of $x, $y"
           environment ! EnvironmentActor.Add(x, y)
-        case Request(Remove(p)) =>
+        case Request(_, Remove(p)) =>
           log debug s"Running asked for removal of $p"
           environment ! EnvironmentActor.Remove(p)
-        case Request(Result(e)) =>
+        case Request(Settings(_, 0, _), Result(e)) =>
+          log debug s"Running sent the last environment to be published and is going to shutdown"
+          view ! ViewActor.Publish(e)
+          self ! ControllerFSM.Stop
+        case Request(_, Result(e)) =>
           log debug s"Running asked to publish $e and to perform an additional Step"
           view ! ViewActor.Publish(e)
           environment ! EnvironmentActor.Step
@@ -125,16 +144,19 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging{
 
     case Paused -> Paused =>
       nextStateData match {
-        case Request(Add(x, y)) =>
+        case Request(_, Add(x, y)) =>
           log debug s"Paused asked for creation of $x, $y"
           environment ! EnvironmentActor.Add(x, y)
-        case Request(Remove(p)) =>
+        case Request(_, Remove(p)) =>
           log debug s"Paused asked for removal of $p"
           environment ! EnvironmentActor.Remove(p)
-        case Request(Result(e)) =>
+        case Request(_, Result(e)) =>
           log debug s"Paused asked to publish $e"
           view ! ViewActor.Publish(e)
-        case Request(Step) =>
+        case Request(Settings(_, 0, _), Step) =>
+          log debug "Paused can no longer perform any Step and is going to shutdown"
+          self ! ControllerFSM.Stop
+        case Request(_, Step) =>
           log debug s"Paused asked to perform another Step"
           environment ! EnvironmentActor.Step
         case _ => log debug "Report this message ASAP"
@@ -147,4 +169,14 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging{
       environment ! EnvironmentActor.Step
   }
   initialize()
+}
+
+private object DefaultConstants {
+  val defaultParticles: Int = 50
+  val defaultIterations: Int = 20000
+  val defaultTimeStep: Int = 40
+}
+
+object EnvironmentConstants {
+  val radius : Double = 100.0
 }
