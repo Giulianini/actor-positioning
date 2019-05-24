@@ -14,11 +14,12 @@ private class ViewActor extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case Publish(e) => log debug s"$e"
-    case StartSimulation => log debug "Start the simulation"
-    case PauseSimulation => log debug "Pause the simulation"
-    case StopSimulation => log debug "Stop the simulation"
-    case StepSimulation => log debug "Step the simulation"
-    case PrepareSimulation => log debug "Prepare the simulation"
+
+    case StartSimulation => context.parent ! ControllerFSM.Start
+    case PauseSimulation => context.parent ! ControllerFSM.Pause
+    case StopSimulation => context.parent ! ControllerFSM.Stop
+    case StepSimulation => context.parent ! ControllerFSM.Step
+    case PrepareSimulation => context.parent ! ControllerFSM.Generate
     case SetParticle(amount: Int) => log debug s"Set particles $amount"
     case SetIteration(amount: Int) => log debug s"Set iteration $amount"
     case SetTime(amount: Int) => log debug s"Set time $amount"
