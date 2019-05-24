@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorLogging, Props}
 import com.sun.javafx.application.PlatformImpl
 import it.unibo.pcd1819.actorpositioning.actors.ViewActor.Publish
 import it.unibo.pcd1819.actorpositioning.model.Environment
-import it.unibo.pcd1819.actorpositioning.view.screens.ViewToActorMessages.{PrepareSimulation, SetIteration, SetParticle, SetTime, StartSimulation, StopSimulation}
+import it.unibo.pcd1819.actorpositioning.view.screens.ViewToActorMessages.{PauseSimulation, PrepareSimulation, SetIteration, SetParticle, SetTime, StartSimulation, StepSimulation, StopSimulation}
 import it.unibo.pcd1819.actorpositioning.view.screens.{ActorObserver, MainScreenView}
 
 private class ViewActor extends Actor with ActorLogging {
@@ -15,7 +15,9 @@ private class ViewActor extends Actor with ActorLogging {
   override def receive: Receive = {
     case Publish(e) => log debug s"$e"
     case StartSimulation => log debug "Start the simulation"
+    case PauseSimulation => log debug "Pause the simulation"
     case StopSimulation => log debug "Stop the simulation"
+    case StepSimulation => log debug "Step the simulation"
     case PrepareSimulation => log debug "Prepare the simulation"
     case SetParticle(amount: Int) => log debug s"Set particles $amount"
     case SetIteration(amount: Int) => log debug s"Set iteration $amount"

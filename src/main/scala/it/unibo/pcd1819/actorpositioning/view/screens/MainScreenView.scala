@@ -5,7 +5,7 @@ import java.util
 import akka.actor.ActorRef
 import it.unibo.pcd1819.actorpositioning.model.Particle
 import it.unibo.pcd1819.actorpositioning.view.FXMLScreens
-import it.unibo.pcd1819.actorpositioning.view.screens.ViewToActorMessages.{PrepareSimulation, SetIteration, SetParticle, SetTime, StartSimulation, StopSimulation}
+import it.unibo.pcd1819.actorpositioning.view.screens.ViewToActorMessages.{PauseSimulation, PrepareSimulation, SetIteration, SetParticle, SetTime, StartSimulation, StepSimulation, StopSimulation}
 import it.unibo.pcd1819.actorpositioning.view.utilities.ViewUtilities
 import it.unibo.pcd1819.actorpositioning.view.utilities.ViewUtilities._
 import javafx.application.Platform
@@ -40,7 +40,9 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
 
   // ##################### TO ACTOR
   override def startSimulation(): Unit = this.viewActorRef ! StartSimulation
+  override def pauseSimulation(): Unit = this.viewActorRef ! PauseSimulation
   override def stopSimulation(): Unit = this.viewActorRef ! StopSimulation
+  override def stepSimulation(): Unit = this.viewActorRef ! StepSimulation
   override def prepareSimulation(): Unit = this.viewActorRef ! PrepareSimulation
   override def setParticles(amount: Int): Unit = this.viewActorRef ! SetParticle(amount)
   override def setIteration(amount: Int): Unit = this.viewActorRef ! SetIteration(amount)
@@ -51,6 +53,7 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
   override def updateParticlesPositions(particlesPosition: util.List[Particle]): Unit = LOG.debug("UPDATE PARTICLES")
   override def displayParticles(particles: util.List[Particle]): Unit = LOG.debug("DISPLAY PARTICLE")
   override def updateExecutionTime(millis: Long): Unit = runLater(() => labelExecutionTime.setText(millis + " "))
+
 }
 
 object MainScreenView {
@@ -59,7 +62,9 @@ object MainScreenView {
 
 object ViewToActorMessages {
   final case object StartSimulation
+  final case object PauseSimulation
   final case object StopSimulation
+  final case object StepSimulation
   final case object PrepareSimulation
   final case class SetParticle(amount: Int)
   final case class SetIteration(amount: Int)
