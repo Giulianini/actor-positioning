@@ -9,17 +9,17 @@ import javafx.scene.input.MouseButton
 import javafx.scene.layout.{AnchorPane, BorderPane, StackPane}
 import org.kordamp.ikonli.material.Material
 
-trait View {
+protected trait View {
   def startSimulation(): Unit
   def stopSimulation(): Unit
   def prepareSimulation(): Unit
 }
 
-abstract class  AbstractMainScreenView extends View {
-  protected var popupScreenView: PopupScreenView = new PopupScreenView
-  private var popup: JFXPopup = _
+protected abstract class  AbstractMainScreenView extends View{
+  private val popupScreenView: PopupScreenView = new PopupScreenView
   private val startIcon = ViewUtilities iconSetter(Material.PLAY_ARROW, JavafxEnums.BIG_ICON)
   private val stopIcon = ViewUtilities iconSetter(Material.STOP, JavafxEnums.BIG_ICON)
+  private var popup: JFXPopup = _
   private var camera: Camera = _
   private var particles: Group = _
   @FXML protected var mainBorder: AnchorPane = _
@@ -56,7 +56,7 @@ abstract class  AbstractMainScreenView extends View {
   }
 
   private def preparePopup(): Unit = {
-    this.popup = new JFXPopup(this.popupScreenView.mainBorderPopup)
+    this.popup = new JFXPopup(this.popupScreenView mainBorder())
   }
 
   private def prepareButtons(): Unit = {
@@ -106,8 +106,8 @@ abstract class  AbstractMainScreenView extends View {
   def setIteration(amount: Int): Unit
   def setTime(amount: Int, sliderMin: Double, sliderMax: Double): Unit
 
-  class PopupScreenView {
-    @FXML var mainBorderPopup: BorderPane = _
+  protected final class PopupScreenView {
+    @FXML protected var mainBorderPopup: BorderPane = _
     @FXML protected var sliderParticles: JFXSlider = _
     @FXML protected var sliderIteration: JFXSlider = _
     @FXML protected var sliderTimeStep: JFXSlider = _
@@ -117,6 +117,8 @@ abstract class  AbstractMainScreenView extends View {
       this.assertNodeInjected()
       this.prepareSliders()
     }
+
+    def mainBorder(): BorderPane = mainBorderPopup
 
     private def assertNodeInjected(): Unit = {
       assert(this.sliderParticles != null, "fx:id=\"sliderParticles\" was not injected: check your FXML file 'PopupScreen.fxml'.")

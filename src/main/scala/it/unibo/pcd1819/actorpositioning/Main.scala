@@ -2,7 +2,7 @@ package it.unibo.pcd1819.actorpositioning
 
 import akka.actor.{Actor, ActorSystem, DeadLetter, Props}
 import com.typesafe.config.ConfigFactory
-import it.unibo.pcd1819.actorpositioning.actors.{ControllerFSM, ViewActor}
+import it.unibo.pcd1819.actorpositioning.actors.{ControllerFSM}
 
 class DeadLetterListener extends Actor {
     override def receive: Receive = {

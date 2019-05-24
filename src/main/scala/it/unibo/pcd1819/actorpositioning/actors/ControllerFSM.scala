@@ -37,7 +37,6 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging{
 
   private val environment = context actorOf(EnvironmentActor props, "environment")
   private val view = context actorOf(ViewActor props, "view")
-
   startWith(Idle, NoData)
 
   when(Idle) {

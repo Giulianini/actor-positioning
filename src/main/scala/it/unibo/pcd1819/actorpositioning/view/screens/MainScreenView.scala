@@ -3,7 +3,6 @@ package it.unibo.pcd1819.actorpositioning.view.screens
 import java.util
 
 import akka.actor.ActorRef
-import com.sun.javafx.application.PlatformImpl
 import it.unibo.pcd1819.actorpositioning.model.Particle
 import it.unibo.pcd1819.actorpositioning.view.FXMLScreens
 import it.unibo.pcd1819.actorpositioning.view.screens.ViewToActorMessages.{PrepareSimulation, SetIteration, SetParticle, SetTime, StartSimulation, StopSimulation}
@@ -24,8 +23,9 @@ trait ActorObserver {
   def setViewActorRef(actorRef: ActorRef): Unit
 }
 
-case class MainScreenView() extends AbstractMainScreenView with ActorObserver {
+protected final case class MainScreenView() extends AbstractMainScreenView with ActorObserver {
   private var viewActorRef: ActorRef = _
+
   Platform.runLater(() => this.mainBorder = ViewUtilities.loadFxml(this, FXMLScreens.HOME).asInstanceOf[AnchorPane])
   private val LOG: Logger = Logger.getLogger(MainScreenView.getClass)
 
@@ -39,9 +39,9 @@ case class MainScreenView() extends AbstractMainScreenView with ActorObserver {
   }
 
   // ##################### TO ACTOR
-  override def startSimulation(): Unit = this.viewActorRef ! new StartSimulation
-  override def stopSimulation(): Unit = this.viewActorRef ! new StopSimulation
-  override def prepareSimulation(): Unit = this.viewActorRef ! new PrepareSimulation
+  override def startSimulation(): Unit = this.viewActorRef ! StartSimulation
+  override def stopSimulation(): Unit = this.viewActorRef ! StopSimulation
+  override def prepareSimulation(): Unit = this.viewActorRef ! PrepareSimulation
   override def setParticles(amount: Int): Unit = this.viewActorRef ! SetParticle(amount)
   override def setIteration(amount: Int): Unit = this.viewActorRef ! SetIteration(amount)
   override def setTime(amount: Int, sliderMin: Double, sliderMax: Double): Unit = this.viewActorRef ! SetTime(amount)
@@ -53,16 +53,15 @@ case class MainScreenView() extends AbstractMainScreenView with ActorObserver {
   override def updateExecutionTime(millis: Long): Unit = runLater(() => labelExecutionTime.setText(millis + " "))
 }
 
+object MainScreenView {
+  def apply(): MainScreenView = new MainScreenView()
+}
+
 object ViewToActorMessages {
-  final case class StartSimulation()
-  final case class StopSimulation()
-  final case class PrepareSimulation()
+  final case object StartSimulation
+  final case object StopSimulation
+  final case object PrepareSimulation
   final case class SetParticle(amount: Int)
   final case class SetIteration(amount: Int)
   final case class SetTime(amount: Int)
-}
-
-object Main extends App {
-  PlatformImpl.startup(() => {})
-  Platform.runLater(() => new MainScreenView())
 }
