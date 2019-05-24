@@ -28,7 +28,6 @@ private class ViewActor extends Actor with ActorLogging {
 
 object ViewActor {
   def props = Props(new ViewActor())
-
   final case class Publish(env: Environment)
-
+  final case object Stop
 }
