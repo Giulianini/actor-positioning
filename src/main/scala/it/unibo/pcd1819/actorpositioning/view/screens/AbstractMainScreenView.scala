@@ -120,7 +120,7 @@ protected abstract class  AbstractMainScreenView extends View{
       }
     })
   }
-
+  def getParticles: Group = this.particles
   def startSimulation(): Unit
   def pauseSimulation(): Unit
   def stopSimulation(): Unit

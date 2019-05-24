@@ -3,10 +3,11 @@ package it.unibo.pcd1819.actorpositioning.view.screens
 import java.util
 
 import akka.actor.ActorRef
-import it.unibo.pcd1819.actorpositioning.model.Particle
+import it.unibo.pcd1819.actorpositioning.model.{Particle, Vector2D}
 import it.unibo.pcd1819.actorpositioning.view.FXMLScreens
 import it.unibo.pcd1819.actorpositioning.view.screens.ViewToActorMessages.{PauseSimulation, PrepareSimulation, SetIteration, SetParticle, SetTime, StartSimulation, StepSimulation, StopSimulation}
-import it.unibo.pcd1819.actorpositioning.view.utilities.ViewUtilities
+import it.unibo.pcd1819.actorpositioning.view.utilities.JavafxEnums.RECTANGULAR
+import it.unibo.pcd1819.actorpositioning.view.utilities.{ParticleDrawingUtils, ViewUtilities}
 import it.unibo.pcd1819.actorpositioning.view.utilities.ViewUtilities._
 import javafx.application.Platform
 import javafx.application.Platform.runLater
@@ -16,9 +17,11 @@ import javafx.scene.layout.AnchorPane
 import javafx.stage.Stage
 import org.apache.log4j.Logger
 
+import scala.collection.mutable
+
 trait ActorObserver {
   def updateParticlesPositions(particlesPosition: util.List[Particle]): Unit
-  def displayParticles(particles: util.List[Particle]): Unit
+  def displayParticles(particles: Seq[Particle]): Unit
   def updateExecutionTime(millis: Long): Unit
   def setViewActorRef(actorRef: ActorRef): Unit
 }
@@ -28,6 +31,7 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
 
   Platform.runLater(() => this.mainBorder = ViewUtilities.loadFxml(this, FXMLScreens.HOME).asInstanceOf[AnchorPane])
   private val LOG: Logger = Logger.getLogger(MainScreenView.getClass)
+  private var initialParticles: Seq[Particle] = _
 
   @FXML override def initialize(): Unit = {
     super.initialize()
@@ -50,10 +54,17 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
 
   // ##################### FROM ACTOR
   override def setViewActorRef(actorRef: ActorRef): Unit = this.viewActorRef = actorRef
+  override def displayParticles(particles: Seq[Particle]): Unit = {
+    Platform.runLater(() => {
+      this.initialParticles = new mutable.MutableList()
+      this.getParticles.getChildren.clear()
+      particles.foreach(p =>this.getParticles.getChildren.add(ParticleDrawingUtils.
+          createParticleShapes(p, RECTANGULAR, Vector2D(this.mainBorder.getWidth, this.mainBorder.getHeight))))
+    })
+    LOG.debug(this.stack3D.getWidth)
+  }
   override def updateParticlesPositions(particlesPosition: util.List[Particle]): Unit = LOG.debug("UPDATE PARTICLES")
-  override def displayParticles(particles: util.List[Particle]): Unit = LOG.debug("DISPLAY PARTICLE")
   override def updateExecutionTime(millis: Long): Unit = runLater(() => labelExecutionTime.setText(millis + " "))
-
 }
 
 object MainScreenView {

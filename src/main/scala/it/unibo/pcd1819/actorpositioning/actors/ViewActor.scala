@@ -13,7 +13,7 @@ private class ViewActor extends Actor with ActorLogging {
   screenView.setViewActorRef(self)
 
   override def receive: Receive = {
-    case Publish(e) => log debug s"$e"
+    case Publish(e) => screenView.displayParticles(e.environment)
 
     case StartSimulation => context.parent ! ControllerFSM.Start
     case PauseSimulation => context.parent ! ControllerFSM.Pause
