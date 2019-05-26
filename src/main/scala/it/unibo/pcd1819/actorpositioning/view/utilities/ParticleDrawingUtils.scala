@@ -11,16 +11,16 @@ object ParticleDrawingUtils {
   private val BRIGHTNESS = 0.90
 
   def createParticleShapes(particle: Particle, shapeType: ShapeType, environmentSize: Vector2D): Shape = {
-    val radius = particle.mass
+    val particleRadius = particle.mass
     val chargeColor = particle.charge / ParticleDrawingUtils.MAX_COLOR_VALUE
     val color = Color.hsb(ParticleDrawingUtils.HUE, chargeColor, ParticleDrawingUtils.BRIGHTNESS)
     val shape: Shape = shapeType match {
-      case RECTANGULAR => new Rectangle(radius, radius, color)
-      case CIRCLE => new Circle(radius, color)
+      case RECTANGULAR => new Rectangle(particleRadius, particleRadius, color)
+      case CIRCLE => new Circle(particleRadius, color)
     }
     shape.setSmooth(true)
-    shape.setTranslateX(particle.position.x + environmentSize.x * 0.5)
-    shape.setTranslateY(particle.position.y + environmentSize.y * 0.5)
+    shape.setTranslateX(particle.position.x + environmentSize.x * 0.5 - particleRadius / 2)
+    shape.setTranslateY(particle.position.y + environmentSize.y * 0.5 - particleRadius / 2)
     shape
   }
 }

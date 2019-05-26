@@ -107,7 +107,7 @@ protected abstract class  AbstractMainScreenView extends View{
     this.camera = new PerspectiveCamera
     scene3D setCamera this.camera
     scene3D setRoot this.particles
-    scene3D.widthProperty.bind(this.stack3D widthProperty)
+    scene3D.widthProperty.bind(this.stack3D.widthProperty)
     scene3D.heightProperty.bind(this.stack3D.heightProperty)
   }
 
