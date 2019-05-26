@@ -1,13 +1,12 @@
 package it.unibo.pcd1819.actorpositioning.view.utilities
 
-
 import com.jfoenix.controls.{JFXDialog, JFXDialogLayout}
 import eu.hansolo.enzo.notification.{Notification, NotificationEvent}
-import it.unibo.pcd1819.actorpositioning.view.{FXMLScreens, HOME}
+import it.unibo.pcd1819.actorpositioning.view.FXMLScreens.{FXMLScreens, HOME}
 import javafx.event.EventHandler
 import javafx.fxml.FXMLLoader
 import javafx.scene.input.MouseEvent
-import javafx.scene.layout.{AnchorPane, StackPane}
+import javafx.scene.layout.StackPane
 import javafx.scene.text.Text
 import javafx.scene.{CacheHint, Node, Scene}
 import javafx.util.Duration
@@ -34,7 +33,7 @@ object ViewUtilities {
     * the font size
     * @return { @link IconDimension} the { @link IconDimension}
     */
-  def iconSetter(icon: Ikon, fontSize: IconDimension): FontIcon = {
+  def iconSetter(icon: Ikon, fontSize: JavafxEnums.IconDimension): FontIcon = {
     val tempIcon = new FontIcon(icon)
     tempIcon.setIconSize(fontSize.dim)
     tempIcon
@@ -54,17 +53,17 @@ object ViewUtilities {
     * @param ev
     * the { @link MouseEvent}
     */
-  def showDialog(mainPane: StackPane, title: String, description: String, size: DimDialog, ev: EventHandler[MouseEvent]): Unit = {
+  def showDialog(mainPane: StackPane, title: String, description: String, size: JavafxEnums.DimDialog, ev: EventHandler[MouseEvent]): Unit = {
     var css = ""
     val content = new JFXDialogLayout
     val titolo = new Text(title)
     val descrizione = new Text(description)
     size match {
-      case SMALL_DIALOG=>
+      case JavafxEnums.SMALL_DIALOG=>
         css = "dialogTextSmall"
-      case MEDIUM_DIALOG =>
+      case JavafxEnums.MEDIUM_DIALOG =>
         css = "dialogTextMedium"
-      case BIG_DIALOG =>
+      case JavafxEnums.BIG_DIALOG =>
         css = "dialogTextBig"
       case _ =>
     }
@@ -96,18 +95,18 @@ object ViewUtilities {
     * @param ev
     * the { @link EventHandler} ev, lalmba
     */
-  def showNotificationPopup(title: String, message: String, secondsDuration: Notification_Duration, notiType: NotificationType, ev: EventHandler[NotificationEvent]): Unit = { // _____________________________PATTERN STRATEGY
+  def showNotificationPopup(title: String, message: String, secondsDuration: JavafxEnums.Notification_Duration, notiType: JavafxEnums.NotificationType, ev: EventHandler[NotificationEvent]): Unit = { // _____________________________PATTERN STRATEGY
     val no = Notification.Notifier.INSTANCE
     val notification = new Notification(title, message)
     no.setPopupLifetime(Duration.seconds(secondsDuration.time))
     notiType match {
-      case ERROR_NOTIFICATION =>
+      case JavafxEnums.ERROR_NOTIFICATION =>
         no.notifyError(title, message)
-      case WARNING_NOTIFICATION =>
+      case JavafxEnums.WARNING_NOTIFICATION =>
         no.notifyWarning(title, message)
-      case SUCCESS_NOTIFICATION =>
+      case JavafxEnums.SUCCESS_NOTIFICATION =>
         no.notifySuccess(title, message)
-      case INFO_NOTIFICATION =>
+      case JavafxEnums.INFO_NOTIFICATION =>
         no.notifyInfo(title, message)
       case _ =>
         no.notify(notification)

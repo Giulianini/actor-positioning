@@ -33,13 +33,11 @@ object EnvironmentActor {
 
     sealed trait Input
     case object Start extends Input
-    case object Step extends Input //expecting Result(Environment)
+    case object Step extends Input
     case object Stop extends Input
     final case class WorkUpdate(particles: Seq[Particle])
     final case class Add(x: Double, y: Double) extends Input
-    final case class Generate(n: Int, range: Double) extends Input //expecting Result(Environment
+    final case class Generate(n: Int, range: Double) extends Input
     final case class Remove(p: Particle) extends Input
     final case class SetTimeStep(dt: Double) extends Input
-    final case class BulkAdd(s: Seq[(Double, Double)]) extends Input
-    final case class BulkRemove(S: Seq[Particle]) extends Input
 }

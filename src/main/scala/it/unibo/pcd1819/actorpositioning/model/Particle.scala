@@ -52,8 +52,8 @@ object Vector2D {
     def apply(): Vector2D = new Vector2D(0, 0)
     def zero = Vector2D(0, 0)
     def random(within: Double): Vector2D = {
-        val randomX = within + 2 * within * Random.nextDouble()
-        val randomY = within + 2 * within * Random.nextDouble()
+        val randomX = 2 * within * Random.nextDouble() - within
+        val randomY = 2 * within * Random.nextDouble() - within
         Vector2D(randomX, randomY)
     }
 }
