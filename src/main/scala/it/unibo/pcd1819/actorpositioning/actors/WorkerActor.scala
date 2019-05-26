@@ -1,18 +1,20 @@
 package it.unibo.pcd1819.actorpositioning.actors
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Stash}
+import java.util.concurrent.Executors
+
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Stash}
 import it.unibo.pcd1819.actorpositioning.actors.WorkerActor._
-import it.unibo.pcd1819.actorpositioning.model.Particle
+import it.unibo.pcd1819.actorpositioning.model.{Particle, Vector2D}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import akka.pattern.pipe
+import com.typesafe.config.ConfigFactory
 
-class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext) extends Actor with ActorLogging {
+class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext) extends Actor with ActorLogging with Stash {
 
     private var particles: Seq[Particle] = Seq()
     private var particleDataReceived = 0
     private var particleData: Seq[Particle] = Seq()
-    private var siblingRefs: Seq[ActorRef] = Seq()
 
     override def receive: Receive = addRemoveBehaviour orElse {
         case Start =>
@@ -22,24 +24,28 @@ class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext
 
     private def simulationBehaviour: Receive = addRemoveBehaviour orElse {
         case Step =>
-            this.siblingRefs foreach(_ ! ParticleData(this.particles, self.path.name))
+            context.actorSelection("../*") ! ParticleData(this.particles, self.path.name)
         case ParticleData(ps, name) if self.path.name != name =>
             this.particleDataReceived += 1
-            this.particleData = particleData ++ ps
+            this.particleData = this.particleData ++ ps
             this.particleDataReceived match {
                 case n if n == siblings =>
                     this.particleDataReceived = 0
                     Future {
-                        val update = this.particles map { p =>
-                            val newParticle: Particle = p.copy()(p.id)
-                            this.particleData foreach { that =>
-                                newParticle applyForceFrom that
-                            }
-                            newParticle
-                        }
+                        val update = this.particles.map(p => {
+                            var newParticle = p
+                            this.particles.filter(_.id != newParticle.id)
+                                .foreach(that => {
+                                    newParticle = newParticle applyForceFrom that
+                                })
+                            this.particleData.foreach(that => {
+                                newParticle = newParticle applyForceFrom that
+                            })
+                            newParticle commitForce()
+                        })
                         WorkUpdate(update)
                     } pipeTo self
-                    context become updateBehaviour
+                    context become (updateBehaviour, discardOld = false)
             }
         case Stop => {
             log debug "Stopping..."
@@ -49,9 +55,13 @@ class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext
 
     private def updateBehaviour: Receive = {
         case WorkUpdate(ps) =>
+            log debug ps.toString()
             this.particles = ps
             this.particleData = Seq()
+            context.parent ! EnvironmentActor.WorkUpdate(ps)
+            unstashAll()
             context unbecome()
+        case _ => stash()
     }
 
     private def addRemoveBehaviour: Receive = {
@@ -69,9 +79,33 @@ object WorkerActor {
     case object Stop
     final case class Add(particle: Particle)
     final case class Remove(particleId: Int)
-    final case class ParticleData(particles: Seq[Particle], actorName: String)
 
+    private final case class ParticleData(particles: Seq[Particle], actorName: String)
     private case class WorkUpdate(particles: Seq[Particle])
 
-    def props(siblings: Int) = Props(classOf[WorkerActor], siblings)
+    def props(siblings: Int)(implicit executionContext: ExecutionContext) = Props(classOf[WorkerActor], siblings, executionContext)
+}
+
+object WorkerMain extends App {
+    implicit val context: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10))
+
+    val sys = ActorSystem("workers", ConfigFactory.parseString("""akka.loglevel = "DEBUG""""))
+    val worker = sys actorOf WorkerActor.props(1)
+    val worker2 = sys actorOf WorkerActor.props(1)
+
+    worker ! Start
+    worker2 ! Start
+
+    worker ! Add(Particle(Vector2D(2, 2), 1, 1, 0))
+    worker2 ! Add(Particle(Vector2D(5, 5), 1, 1, 1))
+
+    worker ! Step
+    worker2 ! Step
+
+    Thread.sleep(1000)
+    worker ! Step
+    worker2 ! Step
+
+    val p: Particle = Particle(Vector2D.zero, 1, 1, 2)
+
 }

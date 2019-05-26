@@ -7,31 +7,32 @@ object Constants {
     val timeStep: Double = 1.0
 }
 
-case class Particle(var position: Vector2D, mass: Double, charge: Double)(val id: Int) {
-    var velocity: Vector2D = Vector2D()
-    var force: Vector2D = Vector2D()
+case class Particle(position: Vector2D, mass: Double, charge: Double, id: Int)(velocity: Vector2D = Vector2D.zero, force: Vector2D = Vector2D.zero) {
 
-    def applyForceFrom(that: Particle): Unit = { // TODO make this #&$! immutable for the love of god
+    def applyForceFrom(that: Particle): Particle = {
         val distance = position distanceFrom that.position
         val distanceNorm = distance.norm3
         val appliedForce = distance * ((this.charge * that.charge * Constants.universal) / distanceNorm)
-        this.force = this.force + appliedForce
+        this.copy()(velocity = this.velocity, force = appliedForce)
     }
 
-    def commitForce(): Unit = {
+    def commitForce(): Particle = {
         val acceleration = this.force * (1 / this.mass)
-        this.position = this.position + this.velocity * Constants.timeStep
-        this.velocity = this.velocity + acceleration * Constants.timeStep
-        this.force = Vector2D.zero
+        val newPosition = this.position + this.velocity * Constants.timeStep
+        val newVelocity = this.velocity + acceleration * Constants.timeStep
+        val newForce = Vector2D.zero
+        this.copy(position = newPosition)(velocity = newVelocity, force = newForce)
     }
 }
 
 object Particle {
+    def apply(position: Vector2D, mass: Double, charge: Double, id: Int): Particle =
+        new Particle(position, mass, charge, id: Int)(Vector2D.zero, Vector2D.zero)
     def random(range: Double, id: Int): Particle = {
         val randomPosition = Vector2D.random(range)
         val randomMass = Random.nextDouble()
         val randomCharge = Random.nextDouble()
-        Particle(randomPosition, randomMass, randomCharge)(id)
+        Particle(randomPosition, randomMass, randomCharge, id)
     }
 }
 

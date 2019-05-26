@@ -14,13 +14,13 @@ class ParticleFactoryActor extends Actor {
                 val particle = Particle random (range, idCounter)
                 idCounter += 1
                 particle
-            }) toList)
+            }))
     }
 }
 
 object ParticleFactoryActor {
     final case class GenerateRandomParticle(amount: Int, range: Double)
-    final case class NewParticles(particles: List[Particle])
+    final case class NewParticles(particles: Seq[Particle])
 
     val path = "particle-factory"
 
