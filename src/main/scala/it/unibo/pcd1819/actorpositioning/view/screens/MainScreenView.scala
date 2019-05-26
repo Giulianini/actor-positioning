@@ -6,7 +6,6 @@ import akka.actor.ActorRef
 import it.unibo.pcd1819.actorpositioning.model.{Particle, Vector2D}
 import it.unibo.pcd1819.actorpositioning.view.FXMLScreens
 import it.unibo.pcd1819.actorpositioning.view.screens.ViewToActorMessages._
-import it.unibo.pcd1819.actorpositioning.view.utilities.JavafxEnums.RECTANGULAR
 import it.unibo.pcd1819.actorpositioning.view.utilities.ViewUtilities._
 import it.unibo.pcd1819.actorpositioning.view.utilities.{ParticleDrawingUtils, ViewUtilities}
 import javafx.application.Platform
@@ -40,12 +39,13 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
   }
 
   // ##################### TO ACTOR
-  def log(message: String): Unit = this.viewActorRef ! Log(message)
+  override def log(message: String): Unit = this.viewActorRef ! Log(message)
   override def startSimulation(): Unit = this.viewActorRef ! StartSimulation
   override def pauseSimulation(): Unit = this.viewActorRef ! PauseSimulation
   override def stopSimulation(): Unit = this.viewActorRef ! StopSimulation
   override def stepSimulation(): Unit = this.viewActorRef ! StepSimulation
-  override def prepareSimulation(): Unit = this.viewActorRef ! PrepareSimulation
+  //override def prepareSimulation(): Unit = this.viewActorRef ! PrepareSimulation
+  override def prepareSimulation(): Unit = displayParticles(mutable.MutableList[Particle](Particle(Vector2D(0, 0), 100, 50, 1)))
   override def setParticles(amount: Int): Unit = this.viewActorRef ! SetParticle(amount)
   override def setIteration(amount: Int): Unit = this.viewActorRef ! SetIteration(amount)
   override def setTime(amount: Int, sliderMin: Double, sliderMax: Double): Unit = this.viewActorRef ! SetTime(amount)
@@ -57,8 +57,8 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
       this.initialParticles = new mutable.MutableList()
       this.getParticles.getChildren.clear()
       particles.foreach(p => this.getParticles.getChildren.add(ParticleDrawingUtils.
-        createParticleShapes(p, RECTANGULAR, Vector2D(this.stack3D.getWidth, this.stack3D.getHeight))))
-      this.log(this.mainBorder.getWidth.toString)
+        createParticleShapes(p, this.comboBoxShape.getSelectionModel.getSelectedItem,
+          Vector2D(this.stack3D.getWidth, this.stack3D.getHeight))))
     })
   }
   override def updateParticlesPositions(particlesPosition: util.List[Particle]): Unit = this.getClass

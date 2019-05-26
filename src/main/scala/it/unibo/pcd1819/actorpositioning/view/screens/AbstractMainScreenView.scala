@@ -1,9 +1,11 @@
 package it.unibo.pcd1819.actorpositioning.view.screens
-import com.jfoenix.controls.{JFXButton, JFXComboBox, JFXPopup, JFXSlider, JFXToolbar}
+
+import com.jfoenix.controls._
 import it.unibo.pcd1819.actorpositioning.view.FXMLScreens.POPUP_GUI
+import it.unibo.pcd1819.actorpositioning.view.utilities.JavafxEnums.ShapeType
 import it.unibo.pcd1819.actorpositioning.view.utilities.{JavafxEnums, ViewUtilities}
 import javafx.fxml.FXML
-import javafx.scene.{Camera, Group, PerspectiveCamera, SceneAntialiasing, SubScene}
+import javafx.scene._
 import javafx.scene.control.Label
 import javafx.scene.input.MouseButton
 import javafx.scene.layout.{AnchorPane, BorderPane, StackPane}
@@ -16,7 +18,7 @@ protected trait View {
   def prepareSimulation(): Unit
 }
 
-protected abstract class  AbstractMainScreenView extends View{
+protected abstract class AbstractMainScreenView extends View {
   private val popupScreenView: PopupScreenView = new PopupScreenView
   private val startIcon = ViewUtilities iconSetter(Material.PLAY_ARROW, JavafxEnums.BIG_ICON)
   private val pauseIcon = ViewUtilities iconSetter(Material.PAUSE, JavafxEnums.BIG_ICON)
@@ -29,10 +31,10 @@ protected abstract class  AbstractMainScreenView extends View{
   @FXML protected var buttonCreateParticles: JFXButton = _
   @FXML protected var buttonPopup: JFXButton = _
   @FXML protected var buttonStep: JFXButton = _
-  @FXML protected var buttonStartPause:JFXButton = _
+  @FXML protected var buttonStartPause: JFXButton = _
   @FXML protected var buttonStop: JFXButton = _
   @FXML protected var labelExecutionTime: Label = _
-  @FXML protected var comboBoxShape: JFXComboBox[String] = _
+  @FXML protected var comboBoxShape: JFXComboBox[ShapeType.Value] = _
 
   @FXML def initialize(): Unit = {
     this.assertNodeInjected()
@@ -40,6 +42,7 @@ protected abstract class  AbstractMainScreenView extends View{
     this.prepareButtons()
     this.prepareScene3D()
     this.prepareHideToolbar()
+    this.prepareCombos()
     this.showPopupInfo()
   }
 
@@ -69,10 +72,10 @@ protected abstract class  AbstractMainScreenView extends View{
     this.buttonStep.setGraphic(ViewUtilities iconSetter(Material.SKIP_NEXT, JavafxEnums.BIG_ICON))
     this.buttonCreateParticles.setGraphic(ViewUtilities iconSetter(Material.BUBBLE_CHART, JavafxEnums.BIG_ICON))
 
-    this.buttonStartPause setOnAction(_ => {
+    this.buttonStartPause setOnAction (_ => {
       this.buttonStop setDisable false
-       this.buttonStartPause.getGraphic match {
-        case this.startIcon =>  this.buttonStartPause setGraphic this.pauseIcon
+      this.buttonStartPause.getGraphic match {
+        case this.startIcon => this.buttonStartPause setGraphic this.pauseIcon
           this.buttonPopup setDisable true
           this.buttonStep setDisable true
           this.startSimulation()
@@ -96,7 +99,6 @@ protected abstract class  AbstractMainScreenView extends View{
       this.stepSimulation()
     })
     this.buttonCreateParticles.setOnAction(_ => this.prepareSimulation())
-
     this.buttonPopup.setOnAction(_ => this.popup.show(this.mainBorder))
   }
 
@@ -111,6 +113,11 @@ protected abstract class  AbstractMainScreenView extends View{
     scene3D.heightProperty.bind(this.stack3D.heightProperty)
   }
 
+  def prepareCombos(): Unit = {
+    ShapeType.values.foreach(this.comboBoxShape.getItems.add(_))
+    this.comboBoxShape.getSelectionModel.select(1)
+  }
+
   private def prepareHideToolbar(): Unit = {
     this.mainBorder.setOnMouseClicked(ev => {
       if (ev.getButton == MouseButton.SECONDARY && this.toolbar.isVisible) {
@@ -120,6 +127,8 @@ protected abstract class  AbstractMainScreenView extends View{
       }
     })
   }
+
+  def log(message: String): Unit
   def getParticles: Group = this.particles
   def startSimulation(): Unit
   def pauseSimulation(): Unit
