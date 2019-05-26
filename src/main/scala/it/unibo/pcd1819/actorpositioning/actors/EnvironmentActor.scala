@@ -7,6 +7,7 @@ import it.unibo.pcd1819.actorpositioning.model.Particle
 class EnvironmentActor extends Actor with ActorLogging {
 
     private var particles: Seq[Particle] = Seq()
+    private val particleFactory: ActorRef = context actorOf (ParticleFactoryActor.props, ParticleFactoryActor.name)
 
     private def simulationBehaviour: Receive = {
         case _ =>
@@ -17,14 +18,17 @@ class EnvironmentActor extends Actor with ActorLogging {
             log debug "Starting simulation..."
             context become simulationBehaviour
         case Generate(n, range) =>
+            particleFactory ! ParticleFactoryActor.GenerateRandomParticles(n, range)
         case Add(x, y) =>
         case Remove(id) =>
         case ParticleFactoryActor.NewParticles(ps) =>
+            log debug "Received particles"
+            context.parent ! ControllerFSM.Result(ps)
     }
 }
 
 object EnvironmentActor {
-    val basePath = "particle-master"
+    val name = "environment"
 
     case class Start(particles: Int, within: Double)
     case class ParticleInfo(particle: Particle, id: Int)
