@@ -11,6 +11,7 @@ import org.kordamp.ikonli.material.Material
 
 protected trait View {
   def startSimulation(): Unit
+  def pauseSimulation(): Unit
   def stopSimulation(): Unit
   def prepareSimulation(): Unit
 }
@@ -18,7 +19,7 @@ protected trait View {
 protected abstract class  AbstractMainScreenView extends View{
   private val popupScreenView: PopupScreenView = new PopupScreenView
   private val startIcon = ViewUtilities iconSetter(Material.PLAY_ARROW, JavafxEnums.BIG_ICON)
-  private val stopIcon = ViewUtilities iconSetter(Material.STOP, JavafxEnums.BIG_ICON)
+  private val pauseIcon = ViewUtilities iconSetter(Material.PAUSE, JavafxEnums.BIG_ICON)
   private var popup: JFXPopup = _
   private var camera: Camera = _
   private var particles: Group = _
@@ -27,7 +28,9 @@ protected abstract class  AbstractMainScreenView extends View{
   @FXML protected var stack3D: StackPane = _
   @FXML protected var buttonCreateParticles: JFXButton = _
   @FXML protected var buttonPopup: JFXButton = _
-  @FXML protected var buttonStartStop: JFXButton = _
+  @FXML protected var buttonStep: JFXButton = _
+  @FXML protected var buttonStartPause:JFXButton = _
+  @FXML protected var buttonStop: JFXButton = _
   @FXML protected var labelExecutionTime: Label = _
   @FXML protected var comboBoxShape: JFXComboBox[String] = _
 
@@ -51,7 +54,7 @@ protected abstract class  AbstractMainScreenView extends View{
     assert(this.toolbar != null, "fx:id=\"toolbar\" was not injected: check your FXML file 'MainScreen.fxml'.")
     assert(this.buttonPopup != null, "fx:id=\"buttonPopup\" was not injected: check your FXML file 'MainScreen.fxml'.")
     assert(this.labelExecutionTime != null, "fx:id=\"labelExecutionTime\" was not injected: check your FXML file 'MainScreen.fxml'.")
-    assert(this.buttonStartStop != null, "fx:id=\"buttonStartStop\" was not injected: check your FXML file 'MainScreen.fxml'.")
+    assert(this.buttonStartPause != null, "fx:id=\"buttonStartPause\" was not injected: check your FXML file 'MainScreen.fxml'.")
     assert(this.buttonCreateParticles != null, "fx:id=\"buttonCreateParticles\" was not injected: check your FXML file 'PopupScreen.fxml'.")
   }
 
@@ -60,22 +63,41 @@ protected abstract class  AbstractMainScreenView extends View{
   }
 
   private def prepareButtons(): Unit = {
-    this.buttonStartStop.setGraphic(this.startIcon)
+    this.buttonStartPause.setGraphic(this.startIcon)
     this.buttonPopup.setGraphic(ViewUtilities iconSetter(Material.ARROW_DROP_DOWN, JavafxEnums.BIG_ICON))
-    this.buttonStartStop setOnAction(_ => {
-       this.buttonStartStop.getGraphic match {
-        case this.startIcon =>  this.buttonStartStop setGraphic this.stopIcon
+    this.buttonStop.setGraphic(ViewUtilities iconSetter(Material.STOP, JavafxEnums.BIG_ICON))
+    this.buttonStep.setGraphic(ViewUtilities iconSetter(Material.SKIP_NEXT, JavafxEnums.BIG_ICON))
+    this.buttonCreateParticles.setGraphic(ViewUtilities iconSetter(Material.BUBBLE_CHART, JavafxEnums.BIG_ICON))
+
+    this.buttonStartPause setOnAction(_ => {
+      this.buttonStop setDisable false
+       this.buttonStartPause.getGraphic match {
+        case this.startIcon =>  this.buttonStartPause setGraphic this.pauseIcon
           this.buttonPopup setDisable true
+          this.buttonStep setDisable true
           this.startSimulation()
-        case this.stopIcon =>
+        case this.pauseIcon =>
           this.buttonPopup setDisable false
-          this.buttonStartStop setGraphic this.startIcon
-          this.stopSimulation()
+          this.buttonStep setDisable false
+          this.buttonStartPause setGraphic this.startIcon
+          this.pauseSimulation()
       }
     })
-    this.buttonPopup.setOnAction(_ => this.popup show mainBorder)
-    this.buttonCreateParticles.setGraphic(ViewUtilities iconSetter(Material.BUBBLE_CHART, JavafxEnums.BIG_ICON))
+    this.buttonStop setDisable true
+    this.buttonStop.setOnAction(_ => {
+      this.buttonStartPause setDisable false
+      this.buttonStop setDisable true
+      this.buttonStep setDisable false
+      this.buttonStartPause setGraphic this.startIcon
+      this.stopSimulation()
+    })
+    this.buttonStep.setOnAction(_ => {
+      this.buttonStop setDisable false
+      this.stepSimulation()
+    })
     this.buttonCreateParticles.setOnAction(_ => this.prepareSimulation())
+
+    this.buttonPopup.setOnAction(_ => this.popup.show(this.mainBorder))
   }
 
   private def prepareScene3D(): Unit = {
@@ -85,7 +107,7 @@ protected abstract class  AbstractMainScreenView extends View{
     this.camera = new PerspectiveCamera
     scene3D setCamera this.camera
     scene3D setRoot this.particles
-    scene3D.widthProperty.bind(this.stack3D widthProperty)
+    scene3D.widthProperty.bind(this.stack3D.widthProperty)
     scene3D.heightProperty.bind(this.stack3D.heightProperty)
   }
 
@@ -98,9 +120,11 @@ protected abstract class  AbstractMainScreenView extends View{
       }
     })
   }
-
+  def getParticles: Group = this.particles
   def startSimulation(): Unit
+  def pauseSimulation(): Unit
   def stopSimulation(): Unit
+  def stepSimulation(): Unit
   def prepareSimulation(): Unit
   def setParticles(amount: Int): Unit
   def setIteration(amount: Int): Unit
