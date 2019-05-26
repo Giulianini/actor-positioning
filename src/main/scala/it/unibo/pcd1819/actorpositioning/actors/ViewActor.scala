@@ -3,11 +3,14 @@ package it.unibo.pcd1819.actorpositioning.actors
 import akka.actor.{Actor, ActorLogging, Props}
 import com.sun.javafx.application.PlatformImpl
 import it.unibo.pcd1819.actorpositioning.actors.ViewActor.Publish
-import it.unibo.pcd1819.actorpositioning.model.{Environment, Particle}
+import it.unibo.pcd1819.actorpositioning.model.Particle
 import it.unibo.pcd1819.actorpositioning.view.screens.ViewToActorMessages._
 import it.unibo.pcd1819.actorpositioning.view.screens.{ActorObserver, MainScreenView}
 
-class ViewActor extends Actor with ActorLogging {
+class ViewActor(var defaultParticles: Int,
+                var defaultIterations: Int,
+                var defaultTimeStep: Int
+               ) extends Actor with ActorLogging {
   PlatformImpl.startup(() => {})
   private val screenView: ActorObserver = MainScreenView()
   screenView.setViewActorRef(self)
@@ -29,7 +32,8 @@ class ViewActor extends Actor with ActorLogging {
 }
 
 object ViewActor {
-  def props = Props(new ViewActor())
+  def props(defaultParticles: Int, defaultIterations: Int, defaultTimeStep: Int): Props =
+    Props(new ViewActor(defaultParticles, defaultIterations, defaultTimeStep))
   final case class Publish(env: Seq[Particle])
   final case object Stop
 }

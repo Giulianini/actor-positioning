@@ -18,7 +18,6 @@ object Main extends App {
   system.eventStream.subscribe(system.actorOf(Props(classOf[DeadLetterListener])), classOf[DeadLetter])
 
   val result = mutable.MutableList[Particle](Particle(Vector2D(20, 20), 60, 60, 1))
-
   val controller = system actorOf(ControllerFSM.props, "controller")
 
   Thread.sleep(5000)
