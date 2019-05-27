@@ -17,9 +17,9 @@ object Main extends App {
   val system = ActorSystem("root", ConfigFactory.parseString("""akka.loglevel = "DEBUG""""))
   system.eventStream.subscribe(system.actorOf(Props(classOf[DeadLetterListener])), classOf[DeadLetter])
 
-  val result = mutable.MutableList[Particle](Particle(Vector2D(20, 20), 60, 60, 1))
   val controller = system actorOf(ControllerFSM.props, "controller")
 
+  val result = mutable.MutableList[Particle](Particle(Vector2D(20, 20), 60, 60, 1))
   Thread.sleep(5000)
   controller ! ControllerFSM.Result(result)
 
