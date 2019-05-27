@@ -35,9 +35,7 @@ object ControllerFSM {
 class ControllerFSM extends FSM[State, Data] with ActorLogging {
 
   private val environment = context actorOf(EnvironmentActor.props, "environment")
-
   import DefaultConstants._
-
   private val view = context actorOf(ViewActor.props(DEFAULT_PARTICLES, DEFAULT_ITERATIONS, DEFAULT_TIME_STEP), "view")
   private val settings = Settings(DEFAULT_PARTICLES, DEFAULT_ITERATIONS, DEFAULT_TIME_STEP)
 
@@ -88,8 +86,8 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
   }
 
   onTransition {
-    case Pit -> Pit => log debug "You are in the Pit"
-    case _ -> Pit => log debug "This action brings to the Pit"
+    case Pit -> Pit => log error "You are in the Pit"
+    case _ -> Pit => log error "This action brings to the Pit"
 
     case Idle -> Idle =>
       nextStateData match {
@@ -107,11 +105,12 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
           view ! ViewActor.Publish(e)
         case Request(_, UpdateTimeStep(n)) =>
           log debug s"Idle updated timeStep with $n"
+          environment ! EnvironmentActor.SetTimeStep(n)
         case Request(_, UpdateIterations(n)) =>
           log debug s"Idle updated iterations with $n"
         case Request(_, NoInput) =>
           log debug "Initializing FSM"
-        case _ => log debug "Report this message ASAP"
+        case _ => log error "Report this message ASAP"
       }
     case Idle -> Running =>
       log debug "Idle to Running"
@@ -138,7 +137,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
           self ! ControllerFSM.Step
         case Request(Settings(_, i, _), Step) =>
           log debug s"Remaining iterations: $i"
-        case _ => log debug "Report this message ASAP"
+        case _ => log error "Report this message ASAP"
       }
     case Running -> Idle =>
       log debug "Running to Idle"
@@ -163,7 +162,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
         case Request(Settings(_, i, _), Step) =>
           log debug s"Paused asked to perform another Step, remaining iterations: $i"
           environment ! EnvironmentActor.Step
-        case _ => log debug "Report this message ASAP"
+        case _ => log error "Report this message ASAP"
       }
     case Paused -> Idle =>
       log debug "Paused to Idle"
