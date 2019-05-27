@@ -43,6 +43,7 @@ protected abstract class AbstractMainScreenView extends View {
     this.prepareScene3D()
     this.prepareHideToolbar()
     this.prepareCombos()
+    this.prepareAddRemoveParticle()
     this.showPopupInfo()
   }
 
@@ -118,11 +119,27 @@ protected abstract class AbstractMainScreenView extends View {
     this.comboBoxShape.getSelectionModel.select(1)
   }
 
+  def prepareAddRemoveParticle(): Unit = {
+    this.stack3D.setOnMouseClicked(c => {
+      c.getButton match {
+        case MouseButton.PRIMARY => this.addParticle(c.getSceneX - this.stack3D.getWidth * 0.5, c.getSceneY - this.stack3D.getWidth * 0.5)
+        case _ =>
+      }
+    })
+
+    this.particles.getChildren.forEach(k => k.setOnMouseClicked(t => {
+      t.getButton match {
+        case MouseButton.SECONDARY => this.removeParticle(this.getParticles.getChildren.indexOf(t.getSource))
+        case _ =>
+      }
+    }))
+  }
+
   private def prepareHideToolbar(): Unit = {
     this.mainBorder.setOnMouseClicked(ev => {
-      if (ev.getButton == MouseButton.SECONDARY && this.toolbar.isVisible) {
+      if (ev.getButton == MouseButton.MIDDLE && this.toolbar.isVisible) {
         this.toolbar setVisible false
-      } else if (ev.getButton == MouseButton.SECONDARY && !this.toolbar.isVisible) {
+      } else if (ev.getButton == MouseButton.MIDDLE && !this.toolbar.isVisible) {
         this.toolbar setVisible true
       }
     })
@@ -138,6 +155,8 @@ protected abstract class AbstractMainScreenView extends View {
   def setParticles(amount: Int): Unit
   def setIteration(amount: Int): Unit
   def setTime(amount: Int, sliderMin: Double, sliderMax: Double): Unit
+  def addParticle(posX: Double, posY: Double): Unit
+  def removeParticle(index: Int): Unit
 
   protected final class PopupScreenView {
     @FXML protected var mainBorderPopup: BorderPane = _

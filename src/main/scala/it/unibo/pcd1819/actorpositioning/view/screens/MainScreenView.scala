@@ -44,11 +44,12 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
   override def pauseSimulation(): Unit = this.viewActorRef ! PauseSimulation
   override def stopSimulation(): Unit = this.viewActorRef ! StopSimulation
   override def stepSimulation(): Unit = this.viewActorRef ! StepSimulation
-  //override def prepareSimulation(): Unit = this.viewActorRef ! PrepareSimulation
-  override def prepareSimulation(): Unit = displayParticles(mutable.MutableList[Particle](Particle(Vector2D(0, 0), 100, 50, 1)))
+  override def prepareSimulation(): Unit = this.viewActorRef ! PrepareSimulation
   override def setParticles(amount: Int): Unit = this.viewActorRef ! SetParticle(amount)
   override def setIteration(amount: Int): Unit = this.viewActorRef ! SetIteration(amount)
   override def setTime(amount: Int, sliderMin: Double, sliderMax: Double): Unit = this.viewActorRef ! SetTime(amount)
+  override def addParticle(posX: Double, posY: Double): Unit = log("Position: " + posX)
+  override def removeParticle(index: Int): Unit = log("Remove particle: " + index)
 
   // ##################### FROM ACTOR
   override def setViewActorRef(actorRef: ActorRef): Unit = this.viewActorRef = actorRef
@@ -59,6 +60,7 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
       particles.foreach(p => this.getParticles.getChildren.add(ParticleDrawingUtils.
         createParticleShapes(p, this.comboBoxShape.getSelectionModel.getSelectedItem,
           Vector2D(this.stack3D.getWidth, this.stack3D.getHeight))))
+      this.getParticles.getChildren.forEach(k => k.setOnMouseClicked(t => log(this.getParticles.getChildren.indexOf(t.getSource) + "")))
     })
   }
   override def updateParticlesPositions(particlesPosition: util.List[Particle]): Unit = this.getClass
