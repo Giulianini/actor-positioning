@@ -2,8 +2,9 @@ package it.unibo.pcd1819.actorpositioning.view.screens
 
 import com.jfoenix.controls._
 import it.unibo.pcd1819.actorpositioning.view.FXMLScreens.POPUP_GUI
-import it.unibo.pcd1819.actorpositioning.view.utilities.JavafxEnums.ShapeType
+import it.unibo.pcd1819.actorpositioning.view.shapes.ShapeId
 import it.unibo.pcd1819.actorpositioning.view.utilities.{JavafxEnums, ViewUtilities}
+import it.unibo.pcd1819.actorpositioning.view.utilities.JavafxEnums.ShapeType
 import javafx.fxml.FXML
 import javafx.scene._
 import javafx.scene.control.Label
@@ -43,7 +44,7 @@ protected abstract class AbstractMainScreenView extends View {
     this.prepareScene3D()
     this.prepareHideToolbar()
     this.prepareCombos()
-    this.prepareAddRemoveParticle()
+    this.prepareAddOnClick()
     this.showPopupInfo()
   }
 
@@ -114,25 +115,28 @@ protected abstract class AbstractMainScreenView extends View {
     scene3D.heightProperty.bind(this.stack3D.heightProperty)
   }
 
-  def prepareCombos(): Unit = {
+  private def prepareCombos(): Unit = {
     ShapeType.values.foreach(this.comboBoxShape.getItems.add(_))
     this.comboBoxShape.getSelectionModel.select(1)
   }
 
-  def prepareAddRemoveParticle(): Unit = {
+  private def prepareAddOnClick(): Unit = {
     this.stack3D.setOnMouseClicked(c => {
       c.getButton match {
-        case MouseButton.PRIMARY => this.addParticle(c.getSceneX - this.stack3D.getWidth * 0.5, c.getSceneY - this.stack3D.getWidth * 0.5)
+        case MouseButton.PRIMARY => this.askToAddParticle(c.getSceneX - this.stack3D.getWidth * 0.5, c.getSceneY - this.stack3D.getHeight * 0.5)
         case _ =>
       }
     })
+  }
 
-    this.particles.getChildren.forEach(k => k.setOnMouseClicked(t => {
+  protected def setRemoveParticleOnClick(particle: ShapeId): Unit = {
+    log("Set remove, id: " + particle.id)
+    particle.setOnMouseClicked(t => {
       t.getButton match {
-        case MouseButton.SECONDARY => this.removeParticle(this.getParticles.getChildren.indexOf(t.getSource))
+        case MouseButton.SECONDARY => this.askToRemoveParticle(particle.id)
         case _ =>
       }
-    }))
+    })
   }
 
   private def prepareHideToolbar(): Unit = {
@@ -155,8 +159,8 @@ protected abstract class AbstractMainScreenView extends View {
   def setParticles(amount: Int): Unit
   def setIteration(amount: Int): Unit
   def setTime(amount: Int, sliderMin: Double, sliderMax: Double): Unit
-  def addParticle(posX: Double, posY: Double): Unit
-  def removeParticle(index: Int): Unit
+  def askToAddParticle(posX: Double, posY: Double): Unit
+  def askToRemoveParticle(index: Int): Unit
 
   protected final class PopupScreenView {
     @FXML protected var mainBorderPopup: BorderPane = _
