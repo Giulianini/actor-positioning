@@ -47,6 +47,8 @@ class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext
                     } pipeTo self
                     context become (updateBehaviour, discardOld = false)
             }
+        case LoadRequest =>
+            sender() ! EnvironmentActor.LoadUpdate(this.particles.size)
         case Stop => {
             log debug "Stopping..."
             context unbecome()
@@ -67,6 +69,9 @@ class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext
     private def addRemoveBehaviour: Receive = {
         case Add(p) =>
             this.particles = this.particles :+ p
+        case SetBulk(ps) =>
+            log debug s"Received ${ps.size} particles"
+            this.particles = ps
         case Remove(id) =>
             this.particles = this.particles.filter(_.id == id)
     }
@@ -78,7 +83,10 @@ object WorkerActor {
     case object Step
     case object Stop
     final case class Add(particle: Particle)
+    final case class SetBulk(particles: Seq[Particle])
     final case class Remove(particleId: Int)
+
+    case object LoadRequest
 
     private final case class ParticleData(particles: Seq[Particle], actorName: String)
     private case class WorkUpdate(particles: Seq[Particle])

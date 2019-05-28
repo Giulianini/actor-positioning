@@ -109,7 +109,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging{
           log debug s"Idle updated iterations with $n"
         case Request(_, NoInput) =>
           log debug "Initializing FSM"
-        case _ => log debug "Report this message ASAP"
+        case _ => log error "Report this message ASAP"
       }
     case Idle -> Running =>
       log debug "Idle to Running"
@@ -174,7 +174,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging{
 }
 
 private object DefaultConstants {
-  val defaultParticles: Int = 50
+  val defaultParticles: Int = 67/*50*/
   val defaultIterations: Int = 20000
   val defaultTimeStep: Int = 40
 }

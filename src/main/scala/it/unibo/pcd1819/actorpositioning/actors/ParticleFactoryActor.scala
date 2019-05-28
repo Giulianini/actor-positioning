@@ -20,6 +20,9 @@ class ParticleFactoryActor extends Actor with ActorLogging {
 }
 
 object ParticleFactoryActor {
+    final case class CreateParticle(x: Double, y: Double)
+    final case class NewParticle(particle: Particle)
+
     final case class GenerateRandomParticles(amount: Int, range: Double)
     final case class NewParticles(particles: Seq[Particle])
 
