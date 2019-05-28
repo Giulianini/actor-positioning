@@ -19,7 +19,7 @@ import javafx.stage.Stage
 import scala.collection.mutable
 
 trait ActorObserver {
-  def updateParticlesPositions(particlesPosition: util.List[Particle]): Unit
+  def updateParticlesPositions(particles: util.List[Particle]): Unit
   def displayParticles(particles: Seq[Particle]): Unit
   def displayParticle(particle: Particle): Unit
   def removeParticle(id: Int): Unit
@@ -27,7 +27,13 @@ trait ActorObserver {
   def setViewActorRef(actorRef: ActorRef): Unit
 }
 
-protected final case class MainScreenView() extends AbstractMainScreenView with ActorObserver {
+protected final case class MainScreenView(private var defaultParticles: Int,
+                                          private var defaultIterations: Int,
+                                          private var defaultTimeStep: Int,
+                                          private var logicSize: Double
+                                         ) extends AbstractMainScreenView(
+  defaultParticles, defaultIterations, defaultTimeStep, logicSize) with ActorObserver {
+
   private var viewActorRef: ActorRef = _
   Platform.runLater(() => this.mainBorder = ViewUtilities.loadFxml(this, FXMLScreens.HOME).asInstanceOf[AnchorPane])
   private var initialParticles: Seq[Particle] = _
@@ -51,15 +57,9 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
   override def setParticles(amount: Int): Unit = this.viewActorRef ! SetParticle(amount)
   override def setIteration(amount: Int): Unit = this.viewActorRef ! SetIteration(amount)
   override def setTime(amount: Int, sliderMin: Double, sliderMax: Double): Unit = this.viewActorRef ! SetTime(amount)
+  override def askToAddParticle(posX: Double, posY: Double): Unit = this.viewActorRef ! AddParticle(posX, posY)
+  override def askToRemoveParticle(id: Int): Unit = this.viewActorRef ! RemoveParticle(id)
 
-  var particleIndex = 0
-
-  override def askToAddParticle(posX: Double, posY: Double): Unit = {
-    log("Asked to add a particle with y = " + posY)
-    this.displayParticle(Particle(Vector2D(posX, posY), 30, 30, particleIndex))
-    particleIndex = particleIndex + 1
-  }
-  override def askToRemoveParticle(index: Int): Unit = this.removeParticle(index) //TODO SEND TO ACTOR
   // ##################### FROM ACTOR
   override def setViewActorRef(actorRef: ActorRef): Unit = this.viewActorRef = actorRef
   override def displayParticles(particles: Seq[Particle]): Unit = {
@@ -70,11 +70,13 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
     })
   }
   override def displayParticle(particle: Particle): Unit = {
-    val shape: ShapeId = ParticleDrawingUtils.createParticleShapes(particle, this.comboBoxShape.getSelectionModel.getSelectedItem,
-      Vector2D(this.stack3D.getWidth, this.stack3D.getHeight), particle.id)
-    log("Created particle with index: " + shape.id)
-    this.setRemoveParticleOnClick(shape)
-    this.getParticles.getChildren.add(shape)
+    Platform.runLater(() => {
+      val shape: ShapeId = ParticleDrawingUtils.createParticleShapes(particle, this.comboBoxShape.getSelectionModel.getSelectedItem,
+        Vector2D(this.stack3D.getWidth, this.stack3D.getHeight), this.logicSize, particle.id)
+      log("Created particle with index: " + shape.id)
+      this.setRemoveParticleOnClick(shape)
+      this.getParticles.getChildren.add(shape)
+    })
   }
   override def removeParticle(id: Int): Unit = {
     this.getParticles.getChildren.remove(this.getParticles.getChildren.stream()
@@ -86,7 +88,11 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
 }
 
 object MainScreenView {
-  def apply(): MainScreenView = new MainScreenView()
+  def apply(defaultParticles: Int,
+            defaultIterations: Int,
+            defaultTimeStep: Int,
+            logicSize: Double
+           ): MainScreenView = new MainScreenView(defaultParticles, defaultIterations, defaultTimeStep, logicSize)
 }
 
 object ViewToActorMessages {
@@ -98,5 +104,7 @@ object ViewToActorMessages {
   final case class SetParticle(amount: Int)
   final case class SetIteration(amount: Int)
   final case class SetTime(amount: Int)
+  final case class AddParticle(x: Double, y: Double)
+  final case class RemoveParticle(id: Int)
   final case class Log(message: String)
 }

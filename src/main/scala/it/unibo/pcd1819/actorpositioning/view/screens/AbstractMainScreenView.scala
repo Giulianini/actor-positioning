@@ -19,7 +19,10 @@ protected trait View {
   def prepareSimulation(): Unit
 }
 
-protected abstract class AbstractMainScreenView extends View {
+protected abstract class AbstractMainScreenView(private var defaultParticles: Int,
+                                                private var defaultIterations: Int,
+                                                private var defaultTimeStep: Int,
+                                                private var logicSize: Double) extends View {
   private val popupScreenView: PopupScreenView = new PopupScreenView
   private val startIcon = ViewUtilities iconSetter(Material.PLAY_ARROW, JavafxEnums.BIG_ICON)
   private val pauseIcon = ViewUtilities iconSetter(Material.PAUSE, JavafxEnums.BIG_ICON)
@@ -123,7 +126,8 @@ protected abstract class AbstractMainScreenView extends View {
   private def prepareAddOnClick(): Unit = {
     this.stack3D.setOnMouseClicked(c => {
       c.getButton match {
-        case MouseButton.PRIMARY => this.askToAddParticle(c.getSceneX - this.stack3D.getWidth * 0.5, c.getSceneY - this.stack3D.getHeight * 0.5)
+        case MouseButton.PRIMARY => this.askToAddParticle((c.getSceneX - this.stack3D.getWidth * 0.5) / (this.stack3D.getWidth * 0.5) * logicSize,
+          (c.getSceneY - this.stack3D.getHeight * 0.5) / (this.stack3D.getHeight * 0.5) * logicSize)
         case _ =>
       }
     })
@@ -160,7 +164,7 @@ protected abstract class AbstractMainScreenView extends View {
   def setIteration(amount: Int): Unit
   def setTime(amount: Int, sliderMin: Double, sliderMax: Double): Unit
   def askToAddParticle(posX: Double, posY: Double): Unit
-  def askToRemoveParticle(index: Int): Unit
+  def askToRemoveParticle(id: Int): Unit
 
   protected final class PopupScreenView {
     @FXML protected var mainBorderPopup: BorderPane = _
@@ -184,8 +188,11 @@ protected abstract class AbstractMainScreenView extends View {
 
     private def prepareSliders(): Unit = {
       this.sliderParticles.setOnMouseReleased(_ => AbstractMainScreenView.this.setParticles(this.sliderParticles.getValue.toInt))
+      this.sliderParticles.setValue(AbstractMainScreenView.this.defaultParticles)
       this.sliderIteration.setOnMouseReleased(_ => AbstractMainScreenView.this.setIteration(this.sliderIteration.getValue.toInt))
+      this.sliderIteration.setValue(AbstractMainScreenView.this.defaultIterations / 100)
       this.sliderTimeStep.setOnMouseReleased(_ => AbstractMainScreenView.this.setTime(this.sliderTimeStep.getValue.toInt, this.sliderTimeStep.getMin, this.sliderTimeStep.getMax))
+      this.sliderTimeStep.setValue(AbstractMainScreenView.this.defaultTimeStep)
     }
   }
 }
