@@ -26,7 +26,7 @@ object JavafxEnums {
   case object MEDIUM_DURATION extends Notification_Duration(5)
   case object SHORT_DURATION extends Notification_Duration(3)
 
-  sealed abstract class ShapeType() {}
-  case object RECTANGULAR extends ShapeType
-  case object CIRCLE extends ShapeType
+  object ShapeType extends Enumeration {
+    val RECTANGULAR, CIRCLE = Value
+  }
 }

@@ -2,7 +2,7 @@ package it.unibo.pcd1819.actorpositioning.actors
 
 import akka.actor.{ActorLogging, FSM, Props}
 import it.unibo.pcd1819.actorpositioning.actors.ControllerFSM._
-import it.unibo.pcd1819.actorpositioning.model.{Environment, Particle}
+import it.unibo.pcd1819.actorpositioning.model.Particle
 
 object ControllerFSM {
   sealed trait State
@@ -29,15 +29,15 @@ object ControllerFSM {
   final case class Result(e: Seq[Particle]) extends Input
 
   final case class Settings(particles: Int, iterations: Int, timeStep: Int)
-  def props = Props(classOf[ControllerFSM])
+  def props = Props(new ControllerFSM())
 }
 
-class ControllerFSM extends FSM[State, Data] with ActorLogging{
+class ControllerFSM extends FSM[State, Data] with ActorLogging {
 
   private val environment = context actorOf(EnvironmentActor.props, "environment")
-  private val view = context actorOf(ViewActor.props, "view")
   import DefaultConstants._
-  private val settings = Settings(defaultParticles, defaultIterations, defaultTimeStep)
+  private val view = context actorOf(ViewActor.props(DEFAULT_PARTICLES, DEFAULT_ITERATIONS, DEFAULT_TIME_STEP), "view")
+  private val settings = Settings(DEFAULT_PARTICLES, DEFAULT_ITERATIONS, DEFAULT_TIME_STEP)
 
   startWith(Idle, Request(settings, NoInput))
 
@@ -57,7 +57,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging{
 
   when(Running) {
     case Event(Start, _) => goto(Pit)
-    case Event(Step, Request(Settings(p, i, t), _)) => goto(Running).using(Request(Settings(p, i-1, t), Step))
+    case Event(Step, Request(Settings(p, i, t), _)) => goto(Running).using(Request(Settings(p, i - 1, t), Step))
     case Event(Pause, _) => goto(Paused)
     case Event(Stop, _) => goto(Idle)
     case Event(GenerateEnvironment, _) => goto(Pit)
@@ -70,13 +70,13 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging{
 
   when(Paused) {
     case Event(Start, _) => goto(Running)
-    case Event(Step, Request(Settings(p, i, t), _)) => goto(Paused).using(Request(Settings(p, i-1, t), Step))
+    case Event(Step, Request(Settings(p, i, t), _)) => goto(Paused).using(Request(Settings(p, i - 1, t), Step))
     case Event(Pause, _) => goto(Pit)
     case Event(Stop, _) => goto(Idle)
     case Event(GenerateEnvironment, _) => goto(Pit)
     case Event(UpdateIterations(_), _) => goto(Pit)
     case Event(UpdateTimeStep(_), _) => goto(Pit)
-    case Event(Add(x, y), Request(s, _)) => goto(Paused).using(Request(s, Add(x,y)))
+    case Event(Add(x, y), Request(s, _)) => goto(Paused).using(Request(s, Add(x, y)))
     case Event(Remove(p), Request(s, _)) => goto(Paused).using(Request(s, Remove(p)))
     case Event(Result(e), Request(s, _)) => goto(Paused).using(Request(s, Result(e)))
   }
@@ -86,8 +86,8 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging{
   }
 
   onTransition {
-    case Pit -> Pit => log debug "You are in the Pit"
-    case _ -> Pit => log debug "This action brings to the Pit"
+    case Pit -> Pit => log error "You are in the Pit"
+    case _ -> Pit => log error "This action brings to the Pit"
 
     case Idle -> Idle =>
       nextStateData match {
@@ -105,6 +105,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging{
           view ! ViewActor.Publish(e)
         case Request(_, UpdateTimeStep(n)) =>
           log debug s"Idle updated timeStep with $n"
+          environment ! EnvironmentActor.SetTimeStep(n)
         case Request(_, UpdateIterations(n)) =>
           log debug s"Idle updated iterations with $n"
         case Request(_, NoInput) =>
@@ -136,7 +137,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging{
           self ! ControllerFSM.Step
         case Request(Settings(_, i, _), Step) =>
           log debug s"Remaining iterations: $i"
-        case _ => log debug "Report this message ASAP"
+        case _ => log error "Report this message ASAP"
       }
     case Running -> Idle =>
       log debug "Running to Idle"
@@ -161,7 +162,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging{
         case Request(Settings(_, i, _), Step) =>
           log debug s"Paused asked to perform another Step, remaining iterations: $i"
           environment ! EnvironmentActor.Step
-        case _ => log debug "Report this message ASAP"
+        case _ => log error "Report this message ASAP"
       }
     case Paused -> Idle =>
       log debug "Paused to Idle"
@@ -174,11 +175,11 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging{
 }
 
 private object DefaultConstants {
-  val defaultParticles: Int = 67/*50*/
-  val defaultIterations: Int = 20000
-  val defaultTimeStep: Int = 40
+  val DEFAULT_PARTICLES: Int = 50
+  val DEFAULT_ITERATIONS: Int = 20000
+  val DEFAULT_TIME_STEP: Int = 40
 }
 
 object EnvironmentConstants {
-  val radius : Double = 100.0
+  val radius: Double = 100.0
 }

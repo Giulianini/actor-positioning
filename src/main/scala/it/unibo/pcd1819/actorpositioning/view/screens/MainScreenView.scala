@@ -6,9 +6,9 @@ import akka.actor.ActorRef
 import it.unibo.pcd1819.actorpositioning.model.{Particle, Vector2D}
 import it.unibo.pcd1819.actorpositioning.view.FXMLScreens
 import it.unibo.pcd1819.actorpositioning.view.screens.ViewToActorMessages._
-import it.unibo.pcd1819.actorpositioning.view.utilities.JavafxEnums.RECTANGULAR
-import it.unibo.pcd1819.actorpositioning.view.utilities.ViewUtilities._
+import it.unibo.pcd1819.actorpositioning.view.shapes.ShapeId
 import it.unibo.pcd1819.actorpositioning.view.utilities.{ParticleDrawingUtils, ViewUtilities}
+import it.unibo.pcd1819.actorpositioning.view.utilities.ViewUtilities._
 import javafx.application.Platform
 import javafx.application.Platform.runLater
 import javafx.fxml.FXML
@@ -21,6 +21,8 @@ import scala.collection.mutable
 trait ActorObserver {
   def updateParticlesPositions(particlesPosition: util.List[Particle]): Unit
   def displayParticles(particles: Seq[Particle]): Unit
+  def displayParticle(particle: Particle): Unit
+  def removeParticle(id: Int): Unit
   def updateExecutionTime(millis: Long): Unit
   def setViewActorRef(actorRef: ActorRef): Unit
 }
@@ -40,7 +42,7 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
   }
 
   // ##################### TO ACTOR
-  def log(message: String): Unit = this.viewActorRef ! Log(message)
+  override def log(message: String): Unit = this.viewActorRef ! Log(message)
   override def startSimulation(): Unit = this.viewActorRef ! StartSimulation
   override def pauseSimulation(): Unit = this.viewActorRef ! PauseSimulation
   override def stopSimulation(): Unit = this.viewActorRef ! StopSimulation
@@ -50,16 +52,34 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
   override def setIteration(amount: Int): Unit = this.viewActorRef ! SetIteration(amount)
   override def setTime(amount: Int, sliderMin: Double, sliderMax: Double): Unit = this.viewActorRef ! SetTime(amount)
 
+  var particleIndex = 0
+
+  override def askToAddParticle(posX: Double, posY: Double): Unit = {
+    log("Asked to add a particle with y = " + posY)
+    this.displayParticle(Particle(Vector2D(posX, posY), 30, 30, particleIndex))
+    particleIndex = particleIndex + 1
+  }
+  override def askToRemoveParticle(index: Int): Unit = this.removeParticle(index) //TODO SEND TO ACTOR
   // ##################### FROM ACTOR
   override def setViewActorRef(actorRef: ActorRef): Unit = this.viewActorRef = actorRef
   override def displayParticles(particles: Seq[Particle]): Unit = {
     Platform.runLater(() => {
       this.initialParticles = new mutable.MutableList()
       this.getParticles.getChildren.clear()
-      particles.foreach(p => this.getParticles.getChildren.add(ParticleDrawingUtils.
-        createParticleShapes(p, RECTANGULAR, Vector2D(this.stack3D.getWidth, this.stack3D.getHeight))))
-      this.log(this.mainBorder.getWidth.toString)
+      particles.foreach(p => displayParticle(p))
     })
+  }
+  override def displayParticle(particle: Particle): Unit = {
+    val shape: ShapeId = ParticleDrawingUtils.createParticleShapes(particle, this.comboBoxShape.getSelectionModel.getSelectedItem,
+      Vector2D(this.stack3D.getWidth, this.stack3D.getHeight), particle.id)
+    log("Created particle with index: " + shape.id)
+    this.setRemoveParticleOnClick(shape)
+    this.getParticles.getChildren.add(shape)
+  }
+  override def removeParticle(id: Int): Unit = {
+    this.getParticles.getChildren.remove(this.getParticles.getChildren.stream()
+      .filter(p => p.asInstanceOf[ShapeId].id == id).findFirst().get())
+    log("Removed particle with index: " + id)
   }
   override def updateParticlesPositions(particlesPosition: util.List[Particle]): Unit = this.getClass
   override def updateExecutionTime(millis: Long): Unit = runLater(() => labelExecutionTime.setText(millis + " "))
