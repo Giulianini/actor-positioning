@@ -103,7 +103,7 @@ object EnvironmentActor {
     final case class WorkUpdate(particles: Seq[Particle])
     final case class Add(x: Double, y: Double) extends Input
     final case class Generate(n: Int, range: Double) extends Input
-    final case class Remove(p: Particle) extends Input
+    final case class Remove(id: Int) extends Input
     final case class SetTimeStep(dt: Double) extends Input
 
     final case class LoadUpdate(particles: Int)
