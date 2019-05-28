@@ -25,7 +25,7 @@ object ControllerFSM {
   final case class UpdateIterations(n: Int) extends Input
   final case class UpdateTimeStep(n: Int) extends Input
   final case class Add(x: Double, y: Double) extends Input
-  final case class Remove(p: Particle) extends Input
+  final case class Remove(id: Int) extends Input
   final case class Result(e: Seq[Particle]) extends Input
 
   final case class Settings(particles: Int, iterations: Int, timeStep: Int)

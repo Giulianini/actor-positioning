@@ -39,11 +39,27 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
     override def receive: Receive = {
         case Start =>
             log debug "Starting simulation..."
-            workers = 0 to processors map (_ => context actorOf WorkerActor.props(processors))
+            workers = 0 until processors map (_ => context actorOf WorkerActor.props(processors - 1))
             workers foreach (_ ! WorkerActor.Start)
-            val chunks: Seq[Seq[Particle]] = (this.startingParticles grouped (this.startingParticles.size / processors)).toSeq
-            log debug s"dim ${chunks.size}"
-            chunks.indices foreach (i => workers(i) ! WorkerActor.SetBulk(chunks(i)))
+            val workerLoad = Math.ceil(this.startingParticles.size.toDouble / workers.size).toInt
+            log debug "load: " + workerLoad
+            log debug "workers: " + workers.size
+            this.startingParticles.indices
+                .zip(this.startingParticles)
+                .groupBy {
+                    case (i, _) => i / workerLoad
+                }
+                .map {
+                    case (i, l) => (i, l.map { case (_, p) => p })
+                }
+                .map {
+                    case (_, ps) => ps
+                }
+                .map(ps => {log debug "chunk size: " + ps.size ; ps})
+                .zip(this.workers)
+                .foreach {
+                    case (ps, w) => w ! WorkerActor.SetBulk(ps)
+                }
             context become simulationBehaviour
         case Generate(n, range) =>
             particleFactory ! ParticleFactoryActor.GenerateRandomParticles(n, range)
@@ -103,7 +119,7 @@ object EnvironmentActor {
     final case class WorkUpdate(particles: Seq[Particle])
     final case class Add(x: Double, y: Double) extends Input
     final case class Generate(n: Int, range: Double) extends Input
-    final case class Remove(p: Particle) extends Input
+    final case class Remove(id: Int) extends Input
     final case class SetTimeStep(dt: Double) extends Input
 
     final case class LoadUpdate(particles: Int)
