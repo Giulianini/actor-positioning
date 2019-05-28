@@ -26,13 +26,20 @@ case class Particle(position: Vector2D, mass: Double, charge: Double, id: Int)(v
 }
 
 object Particle {
+    val massMultiplier = 100
+    val chargeMultiplier = 1
     def apply(position: Vector2D, mass: Double, charge: Double, id: Int): Particle =
         new Particle(position, mass, charge, id: Int)(Vector2D.zero, Vector2D.zero)
     def random(range: Double, id: Int): Particle = {
-        val randomPosition = Vector2D.random(range)
-        val randomMass = Random.nextDouble()
-        val randomCharge = Random.nextDouble()
-        Particle(randomPosition, randomMass, randomCharge, id)
+        val randomX = 2 * range * Random.nextDouble() - range
+        val randomY = 2 * range * Random.nextDouble() - range
+        randomAt(randomX, randomY, id)
+    }
+    def randomAt(x: Double, y: Double, id: Int): Particle = {
+        val position = Vector2D(x, y)
+        val randomMass = Random.nextDouble() * massMultiplier
+        val randomCharge = Random.nextDouble() * chargeMultiplier
+        Particle(position, randomMass, randomCharge, id)
     }
 }
 
@@ -51,9 +58,9 @@ case class Vector2D(x: Double, y: Double) {
 object Vector2D {
     def apply(): Vector2D = new Vector2D(0, 0)
     def zero = Vector2D(0, 0)
-    def random(within: Double): Vector2D = {
-        val randomX = 2 * within * Random.nextDouble() - within
-        val randomY = 2 * within * Random.nextDouble() - within
+    def random(range: Double): Vector2D = {
+        val randomX = 2 * range * Random.nextDouble() - range
+        val randomY = 2 * range * Random.nextDouble() - range
         Vector2D(randomX, randomY)
     }
 }
