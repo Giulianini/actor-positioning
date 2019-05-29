@@ -6,7 +6,7 @@ import it.unibo.pcd1819.actorpositioning.actors.ControllerFSM
 
 class DeadLetterListener extends Actor {
   override def receive: Receive = {
-    case d: DeadLetter => println("DeadLetter: " + d.message + " by " + d.sender + " aimed at " + d.recipient)
+    case d: DeadLetter => //println("DeadLetter: " + d.message + " by " + d.sender + " aimed at " + d.recipient)
   }
 }
 
