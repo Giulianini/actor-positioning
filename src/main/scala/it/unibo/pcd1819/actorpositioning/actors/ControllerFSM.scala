@@ -35,8 +35,11 @@ object ControllerFSM {
 class ControllerFSM extends FSM[State, Data] with ActorLogging {
 
   private val environment = context actorOf(EnvironmentActor.props, "environment")
+
   import DefaultConstants._
-  private val view = context actorOf(ViewActor.props(DEFAULT_PARTICLES, DEFAULT_ITERATIONS, DEFAULT_TIME_STEP), "view")
+  import EnvironmentConstants._
+
+  private val view = context actorOf(ViewActor.props(DEFAULT_PARTICLES, DEFAULT_ITERATIONS, DEFAULT_TIME_STEP, RADIUS), "view")
   private val settings = Settings(DEFAULT_PARTICLES, DEFAULT_ITERATIONS, DEFAULT_TIME_STEP)
   private var startingTime: Long = _
   private var stopwatch: Long = _
@@ -96,7 +99,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
       nextStateData match {
         case Request(Settings(p, _, _), GenerateEnvironment) =>
           log debug s"Idle asked to generate environment"
-          environment ! EnvironmentActor.Generate(p, EnvironmentConstants.radius)
+          environment ! EnvironmentActor.Generate(p, EnvironmentConstants.RADIUS)
         case Request(_, Add(x, y)) =>
           log debug s"Idle asked for creation of $x, $y"
           environment ! EnvironmentActor.Add(x, y)
@@ -188,5 +191,5 @@ private object DefaultConstants {
 }
 
 object EnvironmentConstants {
-  val radius: Double = 100.0
+  val RADIUS: Double = 100.0
 }
