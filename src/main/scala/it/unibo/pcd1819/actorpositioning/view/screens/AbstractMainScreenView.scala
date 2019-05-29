@@ -83,6 +83,7 @@ protected abstract class AbstractMainScreenView(private var defaultParticles: In
         case this.startIcon => this.buttonStartPause setGraphic this.pauseIcon
           this.buttonPopup setDisable true
           this.buttonStep setDisable true
+          this.buttonCreateParticles setDisable true
           this.startSimulation()
         case this.pauseIcon =>
           this.buttonPopup setDisable false
@@ -96,6 +97,7 @@ protected abstract class AbstractMainScreenView(private var defaultParticles: In
       this.buttonStartPause setDisable false
       this.buttonStop setDisable true
       this.buttonStep setDisable false
+      this.buttonCreateParticles setDisable false
       this.buttonStartPause setGraphic this.startIcon
       this.stopSimulation()
     })

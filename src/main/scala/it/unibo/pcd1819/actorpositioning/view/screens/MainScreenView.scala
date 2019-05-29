@@ -1,7 +1,5 @@
 package it.unibo.pcd1819.actorpositioning.view.screens
 
-import java.util
-
 import akka.actor.ActorRef
 import it.unibo.pcd1819.actorpositioning.model.{Particle, Vector2D}
 import it.unibo.pcd1819.actorpositioning.view.FXMLScreens
@@ -10,7 +8,6 @@ import it.unibo.pcd1819.actorpositioning.view.shapes.ShapeId
 import it.unibo.pcd1819.actorpositioning.view.utilities.{ParticleDrawingUtils, ViewUtilities}
 import it.unibo.pcd1819.actorpositioning.view.utilities.ViewUtilities._
 import javafx.application.Platform
-import javafx.application.Platform.runLater
 import javafx.fxml.FXML
 import javafx.scene.Scene
 import javafx.scene.layout.AnchorPane
@@ -19,11 +16,8 @@ import javafx.stage.Stage
 import scala.collection.mutable
 
 trait ActorObserver {
-  def updateParticlesPositions(particles: util.List[Particle]): Unit
-  def displayParticles(particles: Seq[Particle]): Unit
-  def displayParticle(particle: Particle): Unit
+  def displayParticles(particles: Seq[Particle], elapsed: Long): Unit
   def removeParticle(id: Int): Unit
-  def updateExecutionTime(millis: Long): Unit
   def setViewActorRef(actorRef: ActorRef): Unit
 }
 
@@ -62,14 +56,15 @@ protected final case class MainScreenView(private var defaultParticles: Int,
 
   // ##################### FROM ACTOR
   override def setViewActorRef(actorRef: ActorRef): Unit = this.viewActorRef = actorRef
-  override def displayParticles(particles: Seq[Particle]): Unit = {
+  override def displayParticles(particles: Seq[Particle], elapsed: Long): Unit = {
     Platform.runLater(() => {
+      this.labelExecutionTime.setText(elapsed.toString)
       this.initialParticles = new mutable.MutableList()
       this.getParticles.getChildren.clear()
       particles.foreach(p => displayParticle(p))
     })
   }
-  override def displayParticle(particle: Particle): Unit = {
+  def displayParticle(particle: Particle): Unit = {
     Platform.runLater(() => {
       val shape: ShapeId = ParticleDrawingUtils.createParticleShapes(particle, this.comboBoxShape.getSelectionModel.getSelectedItem,
         Vector2D(this.stack3D.getWidth, this.stack3D.getHeight), this.logicSize, particle.id)
@@ -83,8 +78,6 @@ protected final case class MainScreenView(private var defaultParticles: Int,
       .filter(p => p.asInstanceOf[ShapeId].id == id).findFirst().get())
     log("Removed particle with index: " + id)
   }
-  override def updateParticlesPositions(particlesPosition: util.List[Particle]): Unit = this.getClass
-  override def updateExecutionTime(millis: Long): Unit = runLater(() => labelExecutionTime.setText(millis + " "))
 }
 
 object MainScreenView {
