@@ -20,7 +20,7 @@ import scala.collection.mutable
 
 trait ActorObserver {
   def updateParticlesPositions(particlesPosition: util.List[Particle]): Unit
-  def displayParticles(particles: Seq[Particle]): Unit
+  def displayParticles(particles: Seq[Particle], elapsed: Long): Unit
   def displayParticle(particle: Particle): Unit
   def removeParticle(id: Int): Unit
   def updateExecutionTime(millis: Long): Unit
@@ -62,7 +62,7 @@ protected final case class MainScreenView() extends AbstractMainScreenView with 
   override def askToRemoveParticle(index: Int): Unit = this.removeParticle(index) //TODO SEND TO ACTOR
   // ##################### FROM ACTOR
   override def setViewActorRef(actorRef: ActorRef): Unit = this.viewActorRef = actorRef
-  override def displayParticles(particles: Seq[Particle]): Unit = {
+  override def displayParticles(particles: Seq[Particle], elapsed: Long): Unit = {
     Platform.runLater(() => {
       this.initialParticles = new mutable.MutableList()
       this.getParticles.getChildren.clear()

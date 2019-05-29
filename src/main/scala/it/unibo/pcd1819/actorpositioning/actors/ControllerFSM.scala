@@ -38,6 +38,9 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
   import DefaultConstants._
   private val view = context actorOf(ViewActor.props(DEFAULT_PARTICLES, DEFAULT_ITERATIONS, DEFAULT_TIME_STEP), "view")
   private val settings = Settings(DEFAULT_PARTICLES, DEFAULT_ITERATIONS, DEFAULT_TIME_STEP)
+  private var startingTime: Long = _
+  private var stopwatch: Long = _
+  private var actualTime: Long = 0
 
   startWith(Idle, Request(settings, NoInput))
 
@@ -102,7 +105,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
           environment ! EnvironmentActor.Remove(p)
         case Request(_, Result(e)) =>
           log debug s"Idle asked to publish $e"
-          view ! ViewActor.Publish(e)
+          view ! ViewActor.Publish(e, actualTime)
         case Request(_, UpdateTimeStep(n)) =>
           log debug s"Idle updated timeStep with $n"
           environment ! EnvironmentActor.SetTimeStep(n)
@@ -114,9 +117,11 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
       }
     case Idle -> Running =>
       log debug "Idle to Running"
+      startingTime = System.currentTimeMillis()
       environment ! EnvironmentActor.Start
       environment ! EnvironmentActor.Step
     case Idle -> Paused =>
+      startingTime = System.currentTimeMillis()
       log debug "Idle to Paused"
 
     case Running -> Running =>
@@ -129,14 +134,16 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
           environment ! EnvironmentActor.Remove(p)
         case Request(Settings(_, 0, _), Result(e)) =>
           log debug s"Running sent the last environment to be published and is going to shutdown"
-          view ! ViewActor.Publish(e)
+          view ! ViewActor.Publish(e, actualTime)
           self ! ControllerFSM.Stop
         case Request(Settings(_, i, _), Result(e)) =>
           log debug s"Running asked to publish $e and to perform an additional Step"
-          view ! ViewActor.Publish(e)
+
+          view ! ViewActor.Publish(e, actualTime)
           self ! ControllerFSM.Step
         case Request(Settings(_, i, _), Step) =>
           log debug s"Remaining iterations: $i"
+          environment ! EnvironmentActor.Step
         case _ => log error "Report this message ASAP"
       }
     case Running -> Idle =>
@@ -155,7 +162,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
           environment ! EnvironmentActor.Remove(p)
         case Request(_, Result(e)) =>
           log debug s"Paused asked to publish $e"
-          view ! ViewActor.Publish(e)
+          view ! ViewActor.Publish(e, actualTime)
         case Request(Settings(_, 0, _), Step) =>
           log debug "Paused can no longer perform any Step and is going to shutdown"
           self ! ControllerFSM.Stop

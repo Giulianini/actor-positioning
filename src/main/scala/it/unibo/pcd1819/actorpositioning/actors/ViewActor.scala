@@ -16,7 +16,7 @@ class ViewActor(var defaultParticles: Int,
   screenView.setViewActorRef(self)
 
   override def receive: Receive = {
-    case Publish(e) => screenView.displayParticles(e)
+    case Publish(e, elapsed) => screenView.displayParticles(e, elapsed)
 
     case StartSimulation => context.parent ! ControllerFSM.Start
     case PauseSimulation => context.parent ! ControllerFSM.Pause
@@ -34,6 +34,6 @@ class ViewActor(var defaultParticles: Int,
 object ViewActor {
   def props(defaultParticles: Int, defaultIterations: Int, defaultTimeStep: Int): Props =
     Props(new ViewActor(defaultParticles, defaultIterations, defaultTimeStep))
-  final case class Publish(env: Seq[Particle])
+  final case class Publish(env: Seq[Particle], elapsed: Long)
   final case object Stop
 }
