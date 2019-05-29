@@ -39,6 +39,9 @@ dependencies {
     //TESTING
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.scalatest:scalatest_2.11:3.0.0'
+    //LOGING
+    implementation group: 'com.typesafe.akka', name: 'akka-slf4j_2.12', version: '2.5.23'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
     //AKKA
     compile group: 'com.typesafe.akka', name: 'akka-actor_2.12', version: '2.5.22'
 }
@@ -81,11 +84,11 @@ sourceSets {
     }
 }
 
-tasks.withType(ScalaCompile){
+tasks.withType(ScalaCompile) {
     // Map plugin jars to -Xplugin parameter
     List<String> parameters =
             configurations.scalaCompilerPlugin.files.collect {
-                '-Xplugin:'+ it.absolutePath
+                '-Xplugin:' + it.absolutePath
             }
 
     // Add existing parameters
