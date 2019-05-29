@@ -19,6 +19,8 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
     private var timeStep = Constants.timeStep
 
     private var workers: Seq[ActorRef] = Seq()
+    private var updatesReceived = 0
+    private var updatedParticles: Seq[Particle] = Seq()
 
     private var toBeAdded: (Double, Double) = _
     private var minimumLoad = Int.MaxValue
@@ -55,11 +57,11 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
                     case (ps, w) => w ! WorkerActor.SetBulk(ps)
                 }
         case Stop =>
-            log debug "Stopping simulation..."
+//            log debug "Stopping simulation..."
             workers foreach context.stop
             context unbecome()
         case Step => {
-            log debug "Stepping simulation"
+//            log debug "Stepping simulation"
             this.workers foreach (_ ! WorkerActor.Step)
         }
         case Generate(n, range) =>
@@ -72,6 +74,17 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
                 this.discoveringLoads = true
                 this.workers foreach (_ ! WorkerActor.LoadRequest)
             }
+        case WorkUpdate(ps) =>
+            this.updatesReceived += 1
+            this.updatedParticles = this.updatedParticles ++ ps
+            this.updatesReceived match {
+                case n if n == workers.size =>
+//                    log debug "update"
+                    context.parent ! ControllerFSM.Result(this.updatedParticles)
+                    this.updatesReceived = 0
+                    this.updatedParticles = Seq()
+                case _ =>
+            }
         case LoadUpdate(load) =>
             this.loadReplies += 1
             if (load < this.minimumLoad) {
@@ -80,7 +93,7 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
             }
             this.loadReplies match {
                 case n if n == this.workers.size =>
-                    log debug s"Found minimum load actor with size ${this.minimumLoad}"
+//                    log debug s"Found minimum load actor with size ${this.minimumLoad}"
                     this.loadReplies = 0
                     this.discoveringLoads = false
                     this.minimumLoad = Int.MaxValue
@@ -102,7 +115,7 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
             this.startingParticles = this.startingParticles.filter(_.id != id)
             context.parent ! ControllerFSM.Result(this.startingParticles)
         case ParticleFactoryActor.NewParticles(ps) =>
-            log debug "Received particles"
+//            log debug "Received particles"
             this.startingParticles = ps
             context.parent ! ControllerFSM.Result(ps)
         case SetTimeStep(dt) => this.workers foreach (_ ! SetTimeStep(dt))

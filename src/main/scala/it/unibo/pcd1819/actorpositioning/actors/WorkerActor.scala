@@ -19,15 +19,18 @@ class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext
     private var timeStep: Double = Constants.timeStep
 
     override def receive: Receive = addRemoveBehaviour orElse setTimestepBehaviour orElse {
-        case Start =>
+        case Start(dt) =>
             log debug "Starting to work..."
+            this.timeStep = dt
             context become simulationBehaviour
     }
 
     private def simulationBehaviour: Receive = addRemoveBehaviour orElse setTimestepBehaviour orElse {
         case Step =>
+//            log debug "received step"
             context.actorSelection("../*") ! ParticleData(this.particles, self.path.name)
         case ParticleData(ps, name) if self.path.name != name =>
+//            log debug "received particle data"
             this.particleDataReceived += 1
             this.particleData = this.particleData ++ ps
             this.particleDataReceived match {
@@ -49,18 +52,19 @@ class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext
                         WorkUpdate(update)
                     } pipeTo self
                     context become (updateBehaviour, discardOld = false)
+                case _ =>
             }
         case LoadRequest =>
             sender() ! EnvironmentActor.LoadUpdate(this.particles.size)
-        case Stop => {
+        case Stop =>
             log debug "Stopping..."
             context unbecome()
-        }
     }
 
     private def updateBehaviour: Receive = {
         case WorkUpdate(ps) =>
-            log debug ps.toString()
+//            log debug "updating environment"
+//            log debug ps.toString()
             this.particles = ps
             this.particleData = Seq()
             context.parent ! EnvironmentActor.WorkUpdate(ps)
@@ -73,7 +77,7 @@ class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext
         case Add(p) =>
             this.particles = this.particles :+ p
         case SetBulk(ps) =>
-            log debug s"Received ${ps.size} particles"
+//            log debug s"Received ${ps.size} particles"
             this.particles = ps
         case Remove(id) =>
             this.particles = this.particles.filter(_.id == id)
