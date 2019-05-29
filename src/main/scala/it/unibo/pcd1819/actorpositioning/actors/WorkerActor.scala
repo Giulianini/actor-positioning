@@ -31,27 +31,32 @@ class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext
             log debug "received step"
             context.actorSelection("../*") ! ParticleData(this.particles, self.path.name)
         case ParticleData(ps, name) if self.path.name != name =>
-//            log debug "received particle data"
             this.particleDataReceived += 1
             this.particleData = this.particleData ++ ps
+
+            def workUpdateFuture(particles: Seq[Particle], others: Seq[Particle]): Future[WorkUpdate] = Future {
+                implicit val dt: Double = this.timeStep
+                val update: Seq[Particle] = particles.map(p => {
+                    var newParticle = p.copy()
+                    particles.filter(_.id != newParticle.id)
+                      .foreach(that => {
+                          newParticle = newParticle applyForceFrom that
+                      })
+                    others.foreach(that => {
+                        newParticle = newParticle applyForceFrom that
+                    })
+                    newParticle commitForce()
+                })
+                WorkUpdate(update)
+            }
+
             this.particleDataReceived match {
                 case n if n == siblings =>
+                    val particlesCopy = this.particles map (e => e)
+                    val particleDataCopy = this.particleData map (e => e)
+                    workUpdateFuture(particlesCopy, particleDataCopy) pipeTo self
                     this.particleDataReceived = 0
-                    Future {
-                        implicit val dt: Double = this.timeStep
-                        val update = this.particles.map(p => {
-                            var newParticle = p
-                            this.particles.filter(_.id != newParticle.id)
-                                .foreach(that => {
-                                    newParticle = newParticle applyForceFrom that
-                                })
-                            this.particleData.foreach(that => {
-                                newParticle = newParticle applyForceFrom that
-                            })
-                            newParticle commitForce()
-                        })
-                        WorkUpdate(update)
-                    } pipeTo self
+                    this.particleData = Seq()
                     context become (updateBehaviour, discardOld = false)
                 case _ =>
             }

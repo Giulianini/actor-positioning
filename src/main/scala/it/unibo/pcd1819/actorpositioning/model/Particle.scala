@@ -7,21 +7,21 @@ object Constants {
     val timeStep: Double = 1.0
 }
 
-case class Particle(position: Vector2D, mass: Double, charge: Double, id: Int)(velocity: Vector2D = Vector2D.zero, force: Vector2D = Vector2D.zero) {
+case class Particle(position: Vector2D, mass: Double, charge: Double, id: Int, velocity: Vector2D = Vector2D.zero, force: Vector2D = Vector2D.zero) {
 
     def applyForceFrom(that: Particle): Particle = {
         val distance = position distanceFrom that.position
         val distanceNorm = distance.norm3
         val appliedForce = distance * ((this.charge * that.charge * Constants.universal) / distanceNorm)
-        this.copy()(velocity = this.velocity, force = appliedForce)
+        this.copy(velocity = this.velocity, force = appliedForce)
     }
 
     def commitForce()(implicit dt: Double): Particle = {
-        val acceleration = this.force * (1 / this.mass)
+        val acceleration = this.force * (1d / this.mass)
         val newPosition = this.position + this.velocity * dt
         val newVelocity = this.velocity + acceleration * dt
         val newForce = Vector2D.zero
-        this.copy(position = newPosition)(velocity = newVelocity, force = newForce)
+        this.copy(position = newPosition, velocity = newVelocity, force = newForce)
     }
 }
 
@@ -29,10 +29,11 @@ object Particle {
     val massMultiplier = 100
     val chargeMultiplier = 1
     def apply(position: Vector2D, mass: Double, charge: Double, id: Int): Particle =
-        new Particle(position, mass, charge, id: Int)(Vector2D.zero, Vector2D.zero)
+        new Particle(position, mass, charge, id: Int)
     def random(range: Double, id: Int): Particle = {
-        val randomX = 2 * range * Random.nextDouble() - range
-        val randomY = 2 * range * Random.nextDouble() - range
+        def randomWithinRange(): Double = 2 * range * Random.nextDouble() - range
+        val randomX = randomWithinRange()
+        val randomY = randomWithinRange()
         randomAt(randomX, randomY, id)
     }
     def randomAt(x: Double, y: Double, id: Int): Particle = {

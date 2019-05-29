@@ -84,10 +84,13 @@ protected final case class MainScreenView(private var defaultParticles: Int,
     log("Removed particle with index: " + id)
   }
   override def updateParticlesPositions(particlesPosition: Seq[Particle], elapsed: Long): Unit = {
-    this.labelExecutionTime.setText(elapsed.toString)
-    IntStream.range(0, particlesPosition.size).forEach(i => {
-      this.getParticles.getChildren.get(i).setTranslateX(particlesPosition(i).position.x)
-      this.getParticles.getChildren.get(i).setTranslateY(particlesPosition(i).position.y)
+    Platform.runLater(() => {
+      this.labelExecutionTime.setText(elapsed.toString)
+      IntStream.range(0, particlesPosition.size).forEach(i => {
+        this.getParticles.getChildren.get(i).setTranslateX(particlesPosition(i).position.x)
+        this.getParticles.getChildren.get(i).setTranslateY(particlesPosition(i).position.y)
+      })
+
     })
   }
   override def updateExecutionTime(elapsed: Long): Unit = runLater(() => labelExecutionTime.setText(elapsed + " "))

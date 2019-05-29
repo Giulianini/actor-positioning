@@ -13,9 +13,10 @@ class ParticleFactoryActor extends Actor with ActorLogging {
             log debug s"Generating $amount particles within $range"
             sender() ! NewParticles(0 until amount map (_ => {
                 val particle = Particle random (range, idCounter)
+                log info idCounter.toString
+                idCounter += 1
                 particle
             }))
-            idCounter += 1
         case CreateParticle(x, y) =>
             log debug s"Generating particle at $x, $y"
             sender() ! NewParticle(Particle randomAt (x, y, idCounter))

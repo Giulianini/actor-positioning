@@ -79,7 +79,7 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
             this.updatedParticles = this.updatedParticles ++ ps
             this.updatesReceived match {
                 case n if n == workers.size =>
-//                    log debug "update"
+                    log info this.updatedParticles.map(p => p.id).sorted.toString()
                     context.parent ! ControllerFSM.Result(this.updatedParticles)
                     this.updatesReceived = 0
                     this.updatedParticles = Seq()
