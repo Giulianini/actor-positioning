@@ -87,11 +87,21 @@ protected final case class MainScreenView(private var defaultParticles: Int,
   override def updateParticlesPositions(particles: Seq[Particle], elapsed: Long): Unit = {
     Platform.runLater(() => {
       this.labelExecutionTime.setText(elapsed + "")
+      var added = particles.size > this.getParticles.getChildren.size
       particles.foreach(p => {
+        var found = false
+        var i = 0
         this.getParticles.getChildren.forEach(shape => {
-          if (shape.asInstanceOf[ShapeId].id == p.id) {
-            shape.setTranslateX(p.position.x)
-            shape.setTranslateY(p.position.y)
+          if (p.id == shape.asInstanceOf[ShapeId].id) {
+            found = true
+            val posX: Double = (p.position.x / logicSize) * this.stack3D.getWidth * 0.5 + this.stack3D.getWidth * 0.5
+            val posY: Double = (p.position.y / logicSize) * this.stack3D.getHeight * 0.5 + this.stack3D.getHeight * 0.5
+            shape.setTranslateX(posX)
+            shape.setTranslateY(posY)
+          } else if (!found) {
+            i = i + 1
+          } else if (!found && i == this.getParticles.getChildren.size() - 1) {
+            displayParticle(p)
           }
         })
       })

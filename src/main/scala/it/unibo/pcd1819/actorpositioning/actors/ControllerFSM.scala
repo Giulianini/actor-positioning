@@ -184,7 +184,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
 }
 
 private object DefaultConstants {
-  val DEFAULT_PARTICLES: Int = 50
+  val DEFAULT_PARTICLES: Int = 1
   val DEFAULT_ITERATIONS: Int = 20000
   val DEFAULT_TIME_STEP: Int = 40
 }
