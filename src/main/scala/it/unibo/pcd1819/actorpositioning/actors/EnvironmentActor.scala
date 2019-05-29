@@ -62,6 +62,10 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
                     case (ps, w) => w ! WorkerActor.SetBulk(ps)
                 }
             context become simulationBehaviour
+        case Step => {
+            log debug "Stepping simulation"
+            this.workers foreach (_ ! WorkerActor.Step)
+        }
         case Generate(n, range) =>
             particleFactory ! ParticleFactoryActor.GenerateRandomParticles(n, range)
         case Add(x, y) =>
