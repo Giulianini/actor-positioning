@@ -11,7 +11,8 @@ class DeadLetterListener extends Actor {
 }
 
 object Main extends App {
-  val system = ActorSystem("root", ConfigFactory.parseString("""akka.loglevel = "DEBUG""""))
+  val conf = ConfigFactory.load()
+  val system = ActorSystem("root", conf)
   system.eventStream.subscribe(system.actorOf(Props(classOf[DeadLetterListener])), classOf[DeadLetter])
 
   val controller = system actorOf(ControllerFSM.props, "controller")
