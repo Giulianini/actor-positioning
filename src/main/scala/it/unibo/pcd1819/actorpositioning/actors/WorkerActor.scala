@@ -4,7 +4,7 @@ import java.util.concurrent.Executors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Stash}
 import it.unibo.pcd1819.actorpositioning.actors.WorkerActor._
-import it.unibo.pcd1819.actorpositioning.model.{Particle, Vector2D}
+import it.unibo.pcd1819.actorpositioning.model.{Constants, Particle, Vector2D}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import akka.pattern.pipe
@@ -16,13 +16,15 @@ class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext
     private var particleDataReceived = 0
     private var particleData: Seq[Particle] = Seq()
 
-    override def receive: Receive = addRemoveBehaviour orElse {
+    private var timeStep: Double = Constants.timeStep
+
+    override def receive: Receive = addRemoveBehaviour orElse setTimestepBehaviour orElse {
         case Start =>
             log debug "Starting to work..."
             context become simulationBehaviour
     }
 
-    private def simulationBehaviour: Receive = addRemoveBehaviour orElse {
+    private def simulationBehaviour: Receive = addRemoveBehaviour orElse setTimestepBehaviour orElse {
         case Step =>
             context.actorSelection("../*") ! ParticleData(this.particles, self.path.name)
         case ParticleData(ps, name) if self.path.name != name =>
@@ -32,6 +34,7 @@ class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext
                 case n if n == siblings =>
                     this.particleDataReceived = 0
                     Future {
+                        implicit val dt: Double = this.timeStep
                         val update = this.particles.map(p => {
                             var newParticle = p
                             this.particles.filter(_.id != newParticle.id)
@@ -76,10 +79,14 @@ class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext
             this.particles = this.particles.filter(_.id == id)
     }
 
+    private def setTimestepBehaviour: Receive = {
+        case SetTimestep(dt) => this.timeStep = dt
+    }
+
 }
 
 object WorkerActor {
-    case object Start
+    final case class Start(dt: Double)
     case object Step
     case object Stop
     final case class Add(particle: Particle)
@@ -87,6 +94,8 @@ object WorkerActor {
     final case class Remove(particleId: Int)
 
     case object LoadRequest
+
+    final case class SetTimestep(dt: Double)
 
     private final case class ParticleData(particles: Seq[Particle], actorName: String)
     private case class WorkUpdate(particles: Seq[Particle])

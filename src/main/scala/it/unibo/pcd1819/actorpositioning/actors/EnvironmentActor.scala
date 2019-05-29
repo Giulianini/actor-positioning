@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props, Stash}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import it.unibo.pcd1819.actorpositioning.actors.EnvironmentActor._
-import it.unibo.pcd1819.actorpositioning.model.Particle
+import it.unibo.pcd1819.actorpositioning.model.{Constants, Particle}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.concurrent.duration._
@@ -14,8 +14,9 @@ import scala.concurrent.duration._
 class EnvironmentActor extends Actor with ActorLogging with Stash {
 
     private var startingParticles: Seq[Particle] = Seq()
-    private var particles: Seq[Particle] = Seq()
     private val particleFactory: ActorRef = context actorOf (ParticleFactoryActor.props, ParticleFactoryActor.name)
+
+    private var timeStep = Constants.timeStep
 
     private var workers: Seq[ActorRef] = Seq()
 
@@ -40,7 +41,7 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
         case Start =>
             log debug "Starting simulation..."
             workers = 0 until processors map (_ => context actorOf WorkerActor.props(processors - 1))
-            workers foreach (_ ! WorkerActor.Start)
+            workers foreach (_ ! WorkerActor.Start(this.timeStep))
             val workerLoad = Math.ceil(this.startingParticles.size.toDouble / workers.size).toInt
             log debug "load: " + workerLoad
             log debug "workers: " + workers.size
@@ -95,12 +96,16 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
         case AddToWorker(p, a) =>
             this.startingParticles = this.startingParticles :+ p
             a ! WorkerActor.Add(p)
+            context.parent ! ControllerFSM.Result(this.startingParticles)
         case Remove(id) =>
+            this.workers foreach (_ ! WorkerActor.Remove(id))
+            this.startingParticles = this.startingParticles.filter(_.id != id)
+            context.parent ! ControllerFSM.Result(this.startingParticles)
         case ParticleFactoryActor.NewParticles(ps) =>
             log debug "Received particles"
             this.startingParticles = ps
             context.parent ! ControllerFSM.Result(ps)
-        case SetTimeStep(dt) =>
+        case SetTimeStep(dt) => this.workers foreach (_ ! SetTimeStep(dt))
     }
 }
 
