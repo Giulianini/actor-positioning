@@ -1,7 +1,5 @@
 package it.unibo.pcd1819.actorpositioning.view.screens
 
-import java.util.stream.IntStream
-
 import akka.actor.ActorRef
 import it.unibo.pcd1819.actorpositioning.model.{Particle, Vector2D}
 import it.unibo.pcd1819.actorpositioning.view.FXMLScreens
@@ -44,6 +42,9 @@ protected final case class MainScreenView(private var defaultParticles: Int,
     val scene = new Scene(this.mainBorder)
     stage.setScene(scene)
     chargeSceneSheets(scene)
+    stage.setOnCloseRequest(_ => {
+      System.exit(0)
+    })
     stage.show()
   }
 
@@ -83,11 +84,17 @@ protected final case class MainScreenView(private var defaultParticles: Int,
       .filter(p => p.asInstanceOf[ShapeId].id == id).findFirst().get())
     log("Removed particle with index: " + id)
   }
-  override def updateParticlesPositions(particlesPosition: Seq[Particle], elapsed: Long): Unit = {
-    this.labelExecutionTime.setText(elapsed.toString)
-    IntStream.range(0, particlesPosition.size).forEach(i => {
-      this.getParticles.getChildren.get(i).setTranslateX(particlesPosition(i).position.x)
-      this.getParticles.getChildren.get(i).setTranslateY(particlesPosition(i).position.y)
+  override def updateParticlesPositions(particles: Seq[Particle], elapsed: Long): Unit = {
+    Platform.runLater(() => {
+      this.labelExecutionTime.setText(elapsed + "")
+      particles.foreach(p => {
+        this.getParticles.getChildren.forEach(shape => {
+          if (shape.asInstanceOf[ShapeId].id == p.id) {
+            shape.setTranslateX(p.position.x)
+            shape.setTranslateY(p.position.y)
+          }
+        })
+      })
     })
   }
   override def updateExecutionTime(elapsed: Long): Unit = runLater(() => labelExecutionTime.setText(elapsed + " "))
