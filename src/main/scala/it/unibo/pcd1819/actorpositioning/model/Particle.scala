@@ -16,10 +16,10 @@ case class Particle(position: Vector2D, mass: Double, charge: Double, id: Int)(v
         this.copy()(velocity = this.velocity, force = appliedForce)
     }
 
-    def commitForce(): Particle = {
+    def commitForce()(implicit dt: Double): Particle = {
         val acceleration = this.force * (1 / this.mass)
-        val newPosition = this.position + this.velocity * Constants.timeStep
-        val newVelocity = this.velocity + acceleration * Constants.timeStep
+        val newPosition = this.position + this.velocity * dt
+        val newVelocity = this.velocity + acceleration * dt
         val newForce = Vector2D.zero
         this.copy(position = newPosition)(velocity = newVelocity, force = newForce)
     }
