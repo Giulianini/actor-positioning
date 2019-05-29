@@ -32,8 +32,8 @@ object Particle {
         new Particle(position, mass, charge, id: Int)
     def random(range: Double, id: Int): Particle = {
         def randomWithinRange(): Double = 2 * range * Random.nextDouble() - range
-        val randomX = randomWithinRange()
-        val randomY = randomWithinRange()
+        val randomX = randomWithinRange() / 10
+        val randomY = randomWithinRange() / 10
         randomAt(randomX, randomY, id)
     }
     def randomAt(x: Double, y: Double, id: Int): Particle = {
@@ -50,8 +50,8 @@ case class Vector2D(x: Double, y: Double) {
     def norm: Double = Math.sqrt(x * x + y * y)
     def norm3: Double = Math.pow(this.norm, 3)
     def distanceFrom(that: Vector2D): Vector2D = {
-        val distanceX: Double = Math.abs(x - that.x)
-        val distanceY: Double = Math.abs(y - that.y)
+        val distanceX: Double = x - that.x
+        val distanceY: Double = y - that.y
         Vector2D(distanceX, distanceY)
     }
 }
