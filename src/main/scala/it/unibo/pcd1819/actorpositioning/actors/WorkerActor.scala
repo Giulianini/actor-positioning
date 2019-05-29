@@ -16,7 +16,7 @@ class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext
     private var particleDataReceived = 0
     private var particleData: Seq[Particle] = Seq()
 
-    private var timeStep: Double = Constants.timeStep
+    private var timeStep: Double = DefaultConstants.DEFAULT_TIME_STEP
 
     override def receive: Receive = addRemoveBehaviour orElse setTimestepBehaviour orElse simulationBehaviour orElse
       updateBehaviour orElse {

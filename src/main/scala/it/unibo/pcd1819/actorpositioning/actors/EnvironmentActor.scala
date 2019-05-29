@@ -16,7 +16,7 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
     private var startingParticles: Seq[Particle] = Seq()
     private val particleFactory: ActorRef = context actorOf (ParticleFactoryActor.props, ParticleFactoryActor.name)
 
-    private var timeStep = Constants.timeStep
+    private var timeStep = DefaultConstants.DEFAULT_TIME_STEP
 
     private var workers: Seq[ActorRef] = Seq()
     private var updatesReceived = 0
