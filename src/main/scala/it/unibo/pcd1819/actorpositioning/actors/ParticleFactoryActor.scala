@@ -1,6 +1,6 @@
 package it.unibo.pcd1819.actorpositioning.actors
 
-import it.unibo.pcd1819.actorpositioning.actors.ParticleFactoryActor.{GenerateRandomParticles, NewParticles}
+import it.unibo.pcd1819.actorpositioning.actors.ParticleFactoryActor.{CreateParticle, GenerateRandomParticles, NewParticle, NewParticles}
 import akka.actor.{Actor, ActorLogging, Props}
 import it.unibo.pcd1819.actorpositioning.model.Particle
 
@@ -13,9 +13,13 @@ class ParticleFactoryActor extends Actor with ActorLogging {
             log debug s"Generating $amount particles within $range"
             sender() ! NewParticles(0 until amount map (_ => {
                 val particle = Particle random (range, idCounter)
-                idCounter += 1
                 particle
             }))
+            idCounter += 1
+        case CreateParticle(x, y) =>
+            log debug s"Generating particle at $x, $y"
+            sender() ! NewParticle(Particle randomAt (x, y, idCounter))
+            idCounter += 1
     }
 }
 

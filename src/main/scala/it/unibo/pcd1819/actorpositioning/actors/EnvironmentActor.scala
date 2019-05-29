@@ -8,7 +8,7 @@ import akka.util.Timeout
 import it.unibo.pcd1819.actorpositioning.actors.EnvironmentActor._
 import it.unibo.pcd1819.actorpositioning.model.{Constants, Particle}
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
 
 class EnvironmentActor extends Actor with ActorLogging with Stash {
@@ -18,7 +18,11 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
 
     private var timeStep = DefaultConstants.DEFAULT_TIME_STEP
 
-    private var workers: Seq[ActorRef] = Seq()
+    private val processors = Runtime.getRuntime.availableProcessors() + 1
+    private implicit val executor: ExecutionContextExecutor =
+        ExecutionContext.fromExecutor(Executors.newFixedThreadPool(processors))
+    private var workers: Seq[ActorRef] = 0 until processors map (_ => context actorOf WorkerActor.props(processors - 1))
+
     private var updatesReceived = 0
     private var updatedParticles: Seq[Particle] = Seq()
 
@@ -28,34 +32,30 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
     private var loadReplies = 0
     private var discoveringLoads = false
 
-    private val processors = Runtime.getRuntime.availableProcessors() + 1
-    private implicit val executor: ExecutionContextExecutor =
-        ExecutionContext.fromExecutor(Executors.newFixedThreadPool(processors))
-
     override def receive: Receive = {
-        case Start =>
-            log debug "Starting simulation..."
-            workers = 0 until processors map (_ => context actorOf WorkerActor.props(processors - 1))
-            workers foreach (_ ! WorkerActor.Start(this.timeStep))
-            val workerLoad = Math.ceil(this.startingParticles.size.toDouble / workers.size).toInt
-            log debug "load: " + workerLoad
-            log debug "workers: " + workers.size
-            this.startingParticles.indices
-                .zip(this.startingParticles)
-                .groupBy {
-                    case (i, _) => i / workerLoad
-                }
-                .map {
-                    case (i, l) => (i, l.map { case (_, p) => p })
-                }
-                .map {
-                    case (_, ps) => ps
-                }
-                .map(ps => {log debug "chunk size: " + ps.size ; ps})
-                .zip(this.workers)
-                .foreach {
-                    case (ps, w) => w ! WorkerActor.SetBulk(ps)
-                }
+//        case Start =>
+//            log debug "Starting simulation..."
+//            workers = 0 until processors map (_ => context actorOf WorkerActor.props(processors - 1))
+//            workers foreach (_ ! WorkerActor.Start(this.timeStep))
+//            val workerLoad = Math.ceil(this.startingParticles.size.toDouble / workers.size).toInt
+//            log debug "load: " + workerLoad
+//            log debug "workers: " + workers.size
+//            this.startingParticles.indices
+//                .zip(this.startingParticles)
+//                .groupBy {
+//                    case (i, _) => i / workerLoad
+//                }
+//                .map {
+//                    case (i, l) => (i, l.map { case (_, p) => p })
+//                }
+//                .map {
+//                    case (_, ps) => ps
+//                }
+//                .map(ps => {log debug "chunk size: " + ps.size ; ps})
+//                .zip(this.workers)
+//                .foreach {
+//                    case (ps, w) => w ! WorkerActor.SetBulk(ps)
+//                }
         case Stop =>
 //            log debug "Stopping simulation..."
             workers foreach context.stop
@@ -93,14 +93,18 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
             }
             this.loadReplies match {
                 case n if n == this.workers.size =>
-//                    log debug s"Found minimum load actor with size ${this.minimumLoad}"
+                    log debug s"Found minimum load actor with size ${this.minimumLoad}"
                     this.loadReplies = 0
                     this.discoveringLoads = false
                     this.minimumLoad = Int.MaxValue
 
                     implicit val timeout: Timeout = Timeout(5.seconds)
-                    (this.particleFactory ? ParticleFactoryActor.CreateParticle(this.toBeAdded._1, this.toBeAdded._2)).map {
-                        case ParticleFactoryActor.NewParticle(p) => AddToWorker(p, this.minimumLoadActor)
+                    val future: Future[Any] = this.particleFactory ? ParticleFactoryActor.CreateParticle(this.toBeAdded._1, this.toBeAdded._2)
+                    future.map {
+                        case ParticleFactoryActor.NewParticle(p) =>
+                            AddToWorker(p, this.minimumLoadActor)
+                        case _ =>
+                            log debug "asjdkl"
                     } pipeTo self
 
                     unstashAll()
@@ -117,6 +121,25 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
         case ParticleFactoryActor.NewParticles(ps) =>
 //            log debug "Received particles"
             this.startingParticles = ps
+            val workerLoad = Math.ceil(this.startingParticles.size.toDouble / workers.size).toInt
+            log debug "load: " + workerLoad
+            log debug "workers: " + workers.size
+            this.startingParticles.indices
+              .zip(this.startingParticles)
+              .groupBy {
+                  case (i, _) => i / workerLoad
+              }
+              .map {
+                  case (i, l) => (i, l.map { case (_, p) => p })
+              }
+              .map {
+                  case (_, ps) => ps
+              }
+              .map(ps => {log debug "chunk size: " + ps.size ; ps})
+              .zip(this.workers)
+              .foreach {
+                  case (ps, w) => w ! WorkerActor.SetBulk(ps)
+              }
             context.parent ! ControllerFSM.Result(ps)
         case SetTimeStep(dt) => this.workers foreach (_ ! SetTimeStep(dt))
     }
