@@ -18,16 +18,17 @@ class WorkerActor(siblings: Int)(implicit val executionContext: ExecutionContext
 
     private var timeStep: Double = Constants.timeStep
 
-    override def receive: Receive = addRemoveBehaviour orElse setTimestepBehaviour orElse {
+    override def receive: Receive = addRemoveBehaviour orElse setTimestepBehaviour orElse simulationBehaviour orElse
+      updateBehaviour orElse {
         case Start(dt) =>
             log debug "Starting to work..."
             this.timeStep = dt
-            context become simulationBehaviour
+//            context become simulationBehaviour
     }
 
-    private def simulationBehaviour: Receive = addRemoveBehaviour orElse setTimestepBehaviour orElse {
+    private def simulationBehaviour: Receive = {
         case Step =>
-//            log debug "received step"
+            log debug "received step"
             context.actorSelection("../*") ! ParticleData(this.particles, self.path.name)
         case ParticleData(ps, name) if self.path.name != name =>
 //            log debug "received particle data"
