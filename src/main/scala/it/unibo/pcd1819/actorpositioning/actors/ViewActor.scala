@@ -2,7 +2,7 @@ package it.unibo.pcd1819.actorpositioning.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
 import com.sun.javafx.application.PlatformImpl
-import it.unibo.pcd1819.actorpositioning.actors.ViewActor.Publish
+import it.unibo.pcd1819.actorpositioning.actors.ViewActor.{Publish, Update}
 import it.unibo.pcd1819.actorpositioning.model.Particle
 import it.unibo.pcd1819.actorpositioning.view.screens.{ActorObserver, MainScreenView}
 import it.unibo.pcd1819.actorpositioning.view.screens.ViewToActorMessages._
@@ -17,7 +17,8 @@ class ViewActor(var defaultParticles: Int,
   screenView.setViewActorRef(self)
 
   override def receive: Receive = {
-    case Publish(e, elapsed) => screenView.displayParticles(e, elapsed)
+    case Publish(e) => screenView.displayParticles(e)
+    case Update(e, elapsed) => screenView.updateParticlesPositions(e, elapsed)
 
     case StartSimulation => context.parent ! ControllerFSM.Start
     case PauseSimulation => context.parent ! ControllerFSM.Pause
@@ -37,6 +38,7 @@ class ViewActor(var defaultParticles: Int,
 object ViewActor {
   def props(defaultParticles: Int, defaultIterations: Int, defaultTimeStep: Int, logicSize: Double): Props =
     Props(new ViewActor(defaultParticles, defaultIterations, defaultTimeStep, logicSize))
-  final case class Publish(env: Seq[Particle], elapsed: Long)
+  final case class Publish(env: Seq[Particle])
+  final case class Update(env: Seq[Particle], elapsed: Long)
   final case object Stop
 }

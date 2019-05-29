@@ -108,7 +108,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
           environment ! EnvironmentActor.Remove(p)
         case Request(_, Result(e)) =>
           log info s"Idle asked to publish $e"
-          view ! ViewActor.Publish(e, actualTime)
+          view ! ViewActor.Publish(e)
         case Request(_, UpdateTimeStep(n)) =>
           log debug s"Idle updated timeStep with $n"
           environment ! EnvironmentActor.SetTimeStep(n)
@@ -137,11 +137,11 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
           environment ! EnvironmentActor.Remove(p)
         case Request(Settings(_, 0, _), Result(e)) =>
           log debug s"Running sent the last environment to be published and is going to shutdown"
-          view ! ViewActor.Publish(e, actualTime)
+          view ! ViewActor.Update(e, actualTime)
           self ! ControllerFSM.Stop
         case Request(Settings(_, i, _), Result(e)) =>
           log info s"Running asked to publish $e and to perform an additional Step"
-          view ! ViewActor.Publish(e, actualTime)
+          view ! ViewActor.Update(e, actualTime)
           self ! ControllerFSM.Step
         case Request(Settings(_, i, _), Step) =>
           log info s"Remaining iterations: $i"
@@ -164,7 +164,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
           environment ! EnvironmentActor.Remove(p)
         case Request(_, Result(e)) =>
           log info s"Paused asked to publish $e"
-          view ! ViewActor.Publish(e, actualTime)
+          view ! ViewActor.Update(e, actualTime)
         case Request(Settings(_, 0, _), Step) =>
           log debug "Paused can no longer perform any Step and is going to shutdown"
           self ! ControllerFSM.Stop
