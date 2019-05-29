@@ -30,13 +30,6 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
     private implicit val executor: ExecutionContextExecutor =
         ExecutionContext.fromExecutor(Executors.newFixedThreadPool(processors))
 
-    private def simulationBehaviour: Receive = {
-        case Stop =>
-            log debug "Stopping simulation..."
-            workers foreach context.stop
-            context unbecome()
-    }
-
     override def receive: Receive = {
         case Start =>
             log debug "Starting simulation..."
@@ -61,7 +54,10 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
                 .foreach {
                     case (ps, w) => w ! WorkerActor.SetBulk(ps)
                 }
-            context become simulationBehaviour
+        case Stop =>
+            log debug "Stopping simulation..."
+            workers foreach context.stop
+            context unbecome()
         case Step => {
             log debug "Stepping simulation"
             this.workers foreach (_ ! WorkerActor.Step)
