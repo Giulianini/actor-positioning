@@ -115,9 +115,10 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
       a ! WorkerActor.Add(p)
       context.parent ! ControllerFSM.Result(this.startingParticles)
     case Remove(id) =>
+      log info "Remove: " + id
       this.workers foreach (_ ! WorkerActor.Remove(id))
       this.startingParticles = this.startingParticles.filter(_.id != id)
-      context.parent ! ControllerFSM.Result(this.startingParticles)
+      context.parent ! ControllerFSM.ResultRemoved(this.startingParticles, id)
     case ParticleFactoryActor.NewParticles(ps) =>
       //            log debug "Received particles"
       this.startingParticles = ps
@@ -136,7 +137,8 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
           case (_, ps) => ps
         }
         .map(ps => {
-          log debug "chunk size: " + ps.size; ps
+          log debug "chunk size: " + ps.size;
+          ps
         })
         .zip(this.workers)
         .foreach {

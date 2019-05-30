@@ -16,11 +16,11 @@ import javafx.stage.Stage
 
 import scala.collection.mutable
 
-trait ActorObserver {
+sealed trait ActorObserver {
   def updateParticlesPositions(particles: Seq[Particle], elapsed: Long): Unit
+  def updateRemove(e: Seq[Particle], removedId: Int, elapsed: Long): Unit
   def displayParticles(particles: Seq[Particle]): Unit
   def displayParticle(particle: Particle): Unit
-  def removeParticle(id: Int): Unit
   def updateExecutionTime(millis: Long): Unit
   def setViewActorRef(actorRef: ActorRef): Unit
 }
@@ -31,10 +31,9 @@ protected final case class MainScreenView(private var defaultParticles: Int,
                                           private var logicSize: Double
                                          ) extends AbstractMainScreenView(
   defaultParticles, defaultIterations, defaultTimeStep, logicSize) with ActorObserver {
-
+  val particleMap: mutable.Map[Int, ShapeId] = mutable.Map()
   private var viewActorRef: ActorRef = _
   Platform.runLater(() => this.mainBorder = ViewUtilities.loadFxml(this, FXMLScreens.HOME).asInstanceOf[AnchorPane])
-  private var initialParticles: Seq[Particle] = _
 
   @FXML override def initialize(): Unit = {
     super.initialize()
@@ -65,38 +64,44 @@ protected final case class MainScreenView(private var defaultParticles: Int,
   override def setViewActorRef(actorRef: ActorRef): Unit = this.viewActorRef = actorRef
   override def displayParticles(particles: Seq[Particle]): Unit = {
     Platform.runLater(() => {
-      this.initialParticles = new mutable.MutableList()
+      this.particleMap.clear()
       this.getParticles.getChildren.clear()
       particles.foreach(p => displayParticle(p))
     })
   }
   override def displayParticle(particle: Particle): Unit = {
+    log("Gui display: " + particle.id)
     Platform.runLater(() => {
       val shape: ShapeId = ParticleDrawingUtils.createParticleShapes(particle, this.comboBoxShape.getSelectionModel.getSelectedItem,
         Vector2D(this.stack3D.getWidth, this.stack3D.getHeight), this.comboBoxOptimize.getSelectionModel.getSelectedIndex, this.logicSize, particle.id)
       this.setRemoveParticleOnClick(shape)
       this.getParticles.getChildren.add(shape)
+      this.particleMap += (particle.id -> shape)
     })
   }
-  override def removeParticle(id: Int): Unit = {
+  def removeParticle(id: Int): Unit = {
+    log("Gui remove: " + id)
     this.getParticles.getChildren.remove(this.getParticles.getChildren.stream()
       .filter(p => p.asInstanceOf[ShapeId].id == id).findFirst().get())
+    this.particleMap -= id
   }
   override def updateParticlesPositions(particles: Seq[Particle], elapsed: Long): Unit = {
     Platform.runLater(() => {
-      for (i <- particles.indices) {
-        for (j <- 0 until this.getParticles.getChildren.size()) {
-          if (particles(i).id == this.getParticles.getChildren.get(j).asInstanceOf[ShapeId].id) {
-            val posX: Double = (particles(i).position.x / logicSize) * this.stack3D.getWidth * 0.5 + this.stack3D.getWidth * 0.5
-            val posY: Double = (particles(i).position.y / logicSize) * this.stack3D.getHeight * 0.5 + this.stack3D.getHeight * 0.5
-            this.getParticles.getChildren.get(j).setTranslateX(posX)
-            this.getParticles.getChildren.get(j).setTranslateY(posY)
-            //log("Update: " + posX + " " + posY)
-          }
-        }
-      }
+      particles.foreach(p => {
+        //if (this.particleMap.contains(p.id)) {
+        val shape = this.particleMap(p.id)
+        val posX: Double = (p.position.x / logicSize) * this.stack3D.getWidth * 0.5 + this.stack3D.getWidth * 0.5
+        val posY: Double = (p.position.y / logicSize) * this.stack3D.getHeight * 0.5 + this.stack3D.getHeight * 0.5
+        shape.setTranslateX(posX)
+        shape.setTranslateY(posY)
+        //} else {
+        //displayParticle(p)
+        //}
+      })
     })
   }
+  override def updateRemove(e: Seq[Particle], removedId: Int, elapsed: Long): Unit = Platform.runLater(() => this.removeParticle(removedId))
+
   override def updateExecutionTime(elapsed: Long): Unit = runLater(() => labelExecutionTime.setText(elapsed + " "))
 }
 

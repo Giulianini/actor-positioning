@@ -27,6 +27,7 @@ object ControllerFSM {
   final case class Add(x: Double, y: Double) extends Input
   final case class Remove(id: Int) extends Input
   final case class Result(e: Seq[Particle]) extends Input
+  final case class ResultRemoved(e: Seq[Particle], removedId: Int) extends Input
 
   final case class Settings(particles: Int, iterations: Int, timeStep: Int)
   def props = Props(new ControllerFSM())
@@ -59,6 +60,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
     case Event(Add(x, y), Request(s, _)) => goto(Idle).using(Request(s, Add(x, y)))
     case Event(Remove(p), Request(s, _)) => goto(Idle).using(Request(s, Remove(p)))
     case Event(Result(e), Request(s, _)) => goto(Idle).using(Request(s, Result(e)))
+    case Event(ResultRemoved(e, id), Request(s, _)) => goto(Idle).using(Request(s, ResultRemoved(e, id)))
   }
 
   when(Running) {
@@ -72,6 +74,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
     case Event(Add(x, y), Request(s, _)) => goto(Running).using(Request(s, Add(x, y)))
     case Event(Remove(p), Request(s, _)) => goto(Running).using(Request(s, Remove(p)))
     case Event(Result(e), Request(s, _)) => goto(Running).using(Request(s, Result(e)))
+    case Event(ResultRemoved(e, id), Request(s, _)) => goto(Running).using(Request(s, ResultRemoved(e, id)))
   }
 
   when(Paused) {
@@ -85,6 +88,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
     case Event(Add(x, y), Request(s, _)) => goto(Paused).using(Request(s, Add(x, y)))
     case Event(Remove(p), Request(s, _)) => goto(Paused).using(Request(s, Remove(p)))
     case Event(Result(e), Request(s, _)) => goto(Paused).using(Request(s, Result(e)))
+    case Event(ResultRemoved(e, id), Request(s, _)) => goto(Paused).using(Request(s, ResultRemoved(e, id)))
   }
 
   when(Pit) {
@@ -104,9 +108,12 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
           log debug s"Idle asked for creation of $x, $y"
           environment ! EnvironmentActor.Add(x, y)
         case Request(_, Remove(p)) =>
-          log debug s"Idle asked for removal of $p"
+          log info s"Idle asked for removal of $p"
           environment ! EnvironmentActor.Remove(p)
         case Request(_, Result(e)) =>
+          log debug s"Idle asked to publish $e"
+          view ! ViewActor.Publish(e)
+        case Request(_, ResultRemoved(e, id)) =>
           log debug s"Idle asked to publish $e"
           view ! ViewActor.Publish(e)
         case Request(_, UpdateTimeStep(n)) =>
@@ -144,6 +151,14 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
           //log debug s"Running asked to publish $e and to perform an additional Step"
           view ! ViewActor.Update(e, actualTime)
           self ! ControllerFSM.Step
+        case Request(Settings(_, 0, _), ResultRemoved(e, id)) =>
+          //log debug s"Running sent the last environment to be published and is going to shutdown"
+          view ! ViewActor.UpdateRemove(e, id, actualTime)
+          self ! ControllerFSM.Stop
+        case Request(Settings(_, i, _), ResultRemoved(e, id)) =>
+          //log debug s"Running asked to publish $e and to perform an additional Step"
+          view ! ViewActor.UpdateRemove(e, id, actualTime)
+          self ! ControllerFSM.Step
         case Request(Settings(_, i, _), Step) =>
           //log debug s"Remaining iterations: $i"
           environment ! EnvironmentActor.Step
@@ -161,11 +176,14 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
           log debug s"Paused asked for creation of $x, $y"
           environment ! EnvironmentActor.Add(x, y)
         case Request(_, Remove(p)) =>
-          log debug s"Paused asked for removal of $p"
+          log info s"Paused asked for removal of $p"
           environment ! EnvironmentActor.Remove(p)
         case Request(_, Result(e)) =>
           log debug s"Paused asked to publish $e"
           view ! ViewActor.Update(e, actualTime)
+        case Request(_, ResultRemoved(e, id)) =>
+          log debug s"Paused asked to publish $e"
+          view ! ViewActor.UpdateRemove(e, id, actualTime)
         case Request(Settings(_, 0, _), Step) =>
           log debug "Paused can no longer perform any Step and is going to shutdown"
           self ! ControllerFSM.Stop
@@ -187,7 +205,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
 private object DefaultConstants {
   val DEFAULT_PARTICLES: Int = 2
   val DEFAULT_ITERATIONS: Int = 20000
-  val DEFAULT_TIME_STEP: Int = 40
+  val DEFAULT_TIME_STEP: Int = 10
 }
 
 object EnvironmentConstants {

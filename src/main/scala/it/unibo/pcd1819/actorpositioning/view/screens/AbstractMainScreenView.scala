@@ -152,8 +152,9 @@ protected abstract class AbstractMainScreenView(private var defaultParticles: In
   protected def setRemoveParticleOnClick(particle: ShapeId): Unit = {
     //log("Set remove, id: " + particle.id)
     particle.setOnMouseClicked(t => {
+      log("Ask to Remove: " + particle.id)
       t.getButton match {
-        case MouseButton.SECONDARY => this.askToRemoveParticle(particle.id)
+        case MouseButton.SECONDARY => this.askToRemoveParticle(particle.id);
         case _ =>
       }
     })
