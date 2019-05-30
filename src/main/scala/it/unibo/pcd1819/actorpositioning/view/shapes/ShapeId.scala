@@ -1,21 +1,13 @@
 package it.unibo.pcd1819.actorpositioning.view.shapes
 
-import javafx.scene.paint.Paint
-import javafx.scene.shape.{Circle, Rectangle, Shape}
+import javafx.scene.shape.{Box, Cylinder, Shape3D, Sphere}
 
-trait ShapeId extends Shape {
+trait ShapeId extends Shape3D {
   def id: Int
 }
 
 object Shapes {
-  class RectangleId(x: Double,
-                    y: Double,
-                    width: Double,
-                    height: Double,
-                    override val id: Int) extends Rectangle(x, y, width, height) with ShapeId {}
-  class CircleId(centerX: Double,
-                 centerY: Double,
-                 radius: Double,
-                 fill: Paint,
-                 override val id: Int) extends Circle(centerX, centerY, radius, fill) with ShapeId {}
+  class SphereId(radius: Double, polygons: Int, override val id: Int) extends Sphere(radius, polygons) with ShapeId {}
+  class CubeId(side: Double, override val id: Int) extends Box(side, side, side) with ShapeId
+  class CylinderId(radius: Double, polygons: Int, override val id: Int) extends Cylinder(radius, radius, polygons) with ShapeId
 }

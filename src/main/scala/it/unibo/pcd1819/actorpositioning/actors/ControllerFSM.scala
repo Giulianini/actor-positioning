@@ -107,7 +107,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
           log debug s"Idle asked for removal of $p"
           environment ! EnvironmentActor.Remove(p)
         case Request(_, Result(e)) =>
-          log info s"Idle asked to publish $e"
+          log debug s"Idle asked to publish $e"
           view ! ViewActor.Publish(e)
         case Request(_, UpdateTimeStep(n)) =>
           log debug s"Idle updated timeStep with $n"
@@ -115,77 +115,77 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
         case Request(_, UpdateIterations(n)) =>
           log debug s"Idle updated iterations with $n"
         case Request(_, NoInput) =>
-          log info "Initializing FSM"
+          log debug "Initializing FSM"
         case _ => log error "Report this message ASAP"
       }
     case Idle -> Running =>
-      log info "Idle to Running"
+      log debug "Idle to Running"
       startingTime = System.currentTimeMillis()
       environment ! EnvironmentActor.Start
       environment ! EnvironmentActor.Step
     case Idle -> Paused =>
       startingTime = System.currentTimeMillis()
       environment ! EnvironmentActor.Step
-      log info "Idle to Paused"
+      log debug "Idle to Paused"
 
     case Running -> Running =>
       nextStateData match {
         case Request(_, Add(x, y)) =>
-          log info s"Running asked for creation of $x, $y"
+          //log debug s"Running asked for creation of $x, $y"
           environment ! EnvironmentActor.Add(x, y)
         case Request(_, Remove(p)) =>
-          log info s"Running asked for removal of $p"
+          //log debug s"Running asked for removal of $p"
           environment ! EnvironmentActor.Remove(p)
         case Request(Settings(_, 0, _), Result(e)) =>
-          log debug s"Running sent the last environment to be published and is going to shutdown"
+          //log debug s"Running sent the last environment to be published and is going to shutdown"
           view ! ViewActor.Update(e, actualTime)
           self ! ControllerFSM.Stop
         case Request(Settings(_, i, _), Result(e)) =>
-          log info s"Running asked to publish $e and to perform an additional Step"
+          //log debug s"Running asked to publish $e and to perform an additional Step"
           view ! ViewActor.Update(e, actualTime)
           self ! ControllerFSM.Step
         case Request(Settings(_, i, _), Step) =>
-          log info s"Remaining iterations: $i"
+          //log debug s"Remaining iterations: $i"
           environment ! EnvironmentActor.Step
         case _ => log error "Report this message ASAP"
       }
     case Running -> Idle =>
-      log info "Running to Idle"
+      log debug "Running to Idle"
       environment ! EnvironmentActor.Stop
     case Running -> Paused =>
-      log info "Running to Paused"
+      log debug "Running to Paused"
 
     case Paused -> Paused =>
       nextStateData match {
         case Request(_, Add(x, y)) =>
-          log info s"Paused asked for creation of $x, $y"
+          log debug s"Paused asked for creation of $x, $y"
           environment ! EnvironmentActor.Add(x, y)
         case Request(_, Remove(p)) =>
-          log info s"Paused asked for removal of $p"
+          log debug s"Paused asked for removal of $p"
           environment ! EnvironmentActor.Remove(p)
         case Request(_, Result(e)) =>
-          log info s"Paused asked to publish $e"
+          log debug s"Paused asked to publish $e"
           view ! ViewActor.Update(e, actualTime)
         case Request(Settings(_, 0, _), Step) =>
           log debug "Paused can no longer perform any Step and is going to shutdown"
           self ! ControllerFSM.Stop
         case Request(Settings(_, i, _), Step) =>
-          log info s"Paused asked to perform another Step, remaining iterations: $i"
+          log debug s"Paused asked to perform another Step, remaining iterations: $i"
           environment ! EnvironmentActor.Step
         case _ => log error "Report this message ASAP"
       }
     case Paused -> Idle =>
-      log info "Paused to Idle"
+      log debug "Paused to Idle"
       environment ! EnvironmentActor.Stop
     case Paused -> Running =>
-      log info "Paused to Running"
+      log debug "Paused to Running"
       environment ! EnvironmentActor.Step
   }
   initialize()
 }
 
 private object DefaultConstants {
-  val DEFAULT_PARTICLES: Int = 20
+  val DEFAULT_PARTICLES: Int = 2
   val DEFAULT_ITERATIONS: Int = 20000
   val DEFAULT_TIME_STEP: Int = 40
 }

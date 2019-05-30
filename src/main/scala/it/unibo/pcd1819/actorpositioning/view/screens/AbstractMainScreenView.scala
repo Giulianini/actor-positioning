@@ -1,5 +1,7 @@
 package it.unibo.pcd1819.actorpositioning.view.screens
 
+import java.util.stream.IntStream
+
 import com.jfoenix.controls._
 import it.unibo.pcd1819.actorpositioning.view.FXMLScreens.POPUP_GUI
 import it.unibo.pcd1819.actorpositioning.view.shapes.ShapeId
@@ -39,6 +41,7 @@ protected abstract class AbstractMainScreenView(private var defaultParticles: In
   @FXML protected var buttonStop: JFXButton = _
   @FXML protected var labelExecutionTime: Label = _
   @FXML protected var comboBoxShape: JFXComboBox[ShapeType.Value] = _
+  @FXML protected var comboBoxOptimize: JFXComboBox[String] = _
 
   @FXML def initialize(): Unit = {
     this.assertNodeInjected()
@@ -123,6 +126,10 @@ protected abstract class AbstractMainScreenView(private var defaultParticles: In
   private def prepareCombos(): Unit = {
     ShapeType.values.foreach(this.comboBoxShape.getItems.add(_))
     this.comboBoxShape.getSelectionModel.select(1)
+    IntStream.range(Constants.MIN_SHAPE_POLYGON, Constants.MAX_SHAPE_POLYGON).forEach({
+      i => this.comboBoxOptimize.getItems.add(i + "Polygons")
+    })
+    this.comboBoxOptimize.getSelectionModel.select(Constants.DEFAULT_SHAPE_POLYGON)
   }
 
   private def prepareAddOnClick(): Unit = {
@@ -136,7 +143,7 @@ protected abstract class AbstractMainScreenView(private var defaultParticles: In
   }
 
   protected def setRemoveParticleOnClick(particle: ShapeId): Unit = {
-    log("Set remove, id: " + particle.id)
+    //log("Set remove, id: " + particle.id)
     particle.setOnMouseClicked(t => {
       t.getButton match {
         case MouseButton.SECONDARY => this.askToRemoveParticle(particle.id)
@@ -197,4 +204,10 @@ protected abstract class AbstractMainScreenView(private var defaultParticles: In
       this.sliderTimeStep.setValue(AbstractMainScreenView.this.defaultTimeStep)
     }
   }
+}
+
+object Constants {
+  val DEFAULT_SHAPE_POLYGON: Int = 20
+  val MAX_SHAPE_POLYGON: Int = 100
+  val MIN_SHAPE_POLYGON: Int = 1
 }

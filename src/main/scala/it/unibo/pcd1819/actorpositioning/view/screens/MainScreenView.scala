@@ -73,8 +73,7 @@ protected final case class MainScreenView(private var defaultParticles: Int,
   override def displayParticle(particle: Particle): Unit = {
     Platform.runLater(() => {
       val shape: ShapeId = ParticleDrawingUtils.createParticleShapes(particle, this.comboBoxShape.getSelectionModel.getSelectedItem,
-        Vector2D(this.stack3D.getWidth, this.stack3D.getHeight), this.logicSize, particle.id)
-      log("Created particle with index: " + shape.id)
+        Vector2D(this.stack3D.getWidth, this.stack3D.getHeight), this.comboBoxOptimize.getSelectionModel.getSelectedIndex, this.logicSize, particle.id)
       this.setRemoveParticleOnClick(shape)
       this.getParticles.getChildren.add(shape)
     })
@@ -82,29 +81,20 @@ protected final case class MainScreenView(private var defaultParticles: Int,
   override def removeParticle(id: Int): Unit = {
     this.getParticles.getChildren.remove(this.getParticles.getChildren.stream()
       .filter(p => p.asInstanceOf[ShapeId].id == id).findFirst().get())
-    log("Removed particle with index: " + id)
   }
   override def updateParticlesPositions(particles: Seq[Particle], elapsed: Long): Unit = {
     Platform.runLater(() => {
-      this.labelExecutionTime.setText(elapsed + "")
-      var added = particles.size > this.getParticles.getChildren.size
-      particles.foreach(p => {
-        var found = false
-        var i = 0
-        this.getParticles.getChildren.forEach(shape => {
-          if (p.id == shape.asInstanceOf[ShapeId].id) {
-            found = true
-            val posX: Double = (p.position.x / logicSize) * this.stack3D.getWidth * 0.5 + this.stack3D.getWidth * 0.5
-            val posY: Double = (p.position.y / logicSize) * this.stack3D.getHeight * 0.5 + this.stack3D.getHeight * 0.5
-            shape.setTranslateX(posX)
-            shape.setTranslateY(posY)
-          } else if (!found) {
-            i = i + 1
-          } else if (!found && i == this.getParticles.getChildren.size() - 1) {
-            displayParticle(p)
+      for (i <- particles.indices) {
+        for (j <- 0 until this.getParticles.getChildren.size()) {
+          if (particles(i).id == this.getParticles.getChildren.get(j).asInstanceOf[ShapeId].id) {
+            val posX: Double = (particles(i).position.x / logicSize) * this.stack3D.getWidth * 0.5 + this.stack3D.getWidth * 0.5
+            val posY: Double = (particles(i).position.y / logicSize) * this.stack3D.getHeight * 0.5 + this.stack3D.getHeight * 0.5
+            this.getParticles.getChildren.get(j).setTranslateX(posX)
+            this.getParticles.getChildren.get(j).setTranslateY(posY)
+            //log("Update: " + posX + " " + posY)
           }
-        })
-      })
+        }
+      }
     })
   }
   override def updateExecutionTime(elapsed: Long): Unit = runLater(() => labelExecutionTime.setText(elapsed + " "))

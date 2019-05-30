@@ -30,7 +30,7 @@ class ViewActor(var defaultParticles: Int,
     case SetTime(amount: Int) => context.parent ! ControllerFSM.UpdateTimeStep(amount)
     case AddParticle(posX: Double, posY: Double) => context.parent ! ControllerFSM.Add(posX, posY)
     case RemoveParticle(id: Int) => context.parent ! ControllerFSM.Remove(id)
-    case Log(message: String) => log debug message
+    case Log(message: String) => log info message
     case _ => log debug "View has been erroneously contacted"
   }
 }
