@@ -8,6 +8,7 @@ import it.unibo.pcd1819.actorpositioning.view.shapes.ShapeId
 import it.unibo.pcd1819.actorpositioning.view.utilities.{JavafxEnums, ViewUtilities}
 import it.unibo.pcd1819.actorpositioning.view.utilities.JavafxEnums.ShapeType
 import javafx.fxml.FXML
+import javafx.geometry.Point3D
 import javafx.scene._
 import javafx.scene.control.Label
 import javafx.scene.input.MouseButton
@@ -49,6 +50,7 @@ protected abstract class AbstractMainScreenView(private var defaultParticles: In
     this.prepareButtons()
     this.prepareScene3D()
     this.prepareHideToolbar()
+    this.prepareEnvironmentMouseTransform()
     this.prepareCombos()
     this.prepareAddOnClick()
     this.showPopupInfo()
@@ -121,6 +123,11 @@ protected abstract class AbstractMainScreenView(private var defaultParticles: In
     scene3D setRoot this.particles
     scene3D.widthProperty.bind(this.stack3D.widthProperty)
     scene3D.heightProperty.bind(this.stack3D.heightProperty)
+  }
+
+  private def prepareEnvironmentMouseTransform(): Unit = {
+    MouseGroupZoomAndRotation(this.particles, this.stack3D, this.camera,
+      new Point3D(this.stack3D.getWidth / 2, this.stack3D.getHeight / 2, Constants.ENVIRONMENT_DEPTH / 2)).initialize()
   }
 
   private def prepareCombos(): Unit = {
@@ -207,7 +214,8 @@ protected abstract class AbstractMainScreenView(private var defaultParticles: In
 }
 
 object Constants {
-  val DEFAULT_SHAPE_POLYGON: Int = 20
-  val MAX_SHAPE_POLYGON: Int = 100
-  val MIN_SHAPE_POLYGON: Int = 1
+  val DEFAULT_SHAPE_POLYGON = 20
+  val MAX_SHAPE_POLYGON = 100
+  val MIN_SHAPE_POLYGON = 1
+  val ENVIRONMENT_DEPTH = 1000
 }
