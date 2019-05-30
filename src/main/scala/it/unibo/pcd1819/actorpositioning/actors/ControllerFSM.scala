@@ -125,6 +125,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
       environment ! EnvironmentActor.Step
     case Idle -> Paused =>
       startingTime = System.currentTimeMillis()
+      environment ! EnvironmentActor.Step
       log info "Idle to Paused"
 
     case Running -> Running =>
@@ -184,7 +185,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
 }
 
 private object DefaultConstants {
-  val DEFAULT_PARTICLES: Int = 1
+  val DEFAULT_PARTICLES: Int = 20
   val DEFAULT_ITERATIONS: Int = 20000
   val DEFAULT_TIME_STEP: Int = 40
 }
