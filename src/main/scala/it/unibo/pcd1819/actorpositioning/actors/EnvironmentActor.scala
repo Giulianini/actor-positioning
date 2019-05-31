@@ -113,7 +113,7 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
     case AddToWorker(p, a) =>
       this.startingParticles = this.startingParticles :+ p
       a ! WorkerActor.Add(p)
-      context.parent ! ControllerFSM.Result(this.startingParticles)
+      context.parent ! ControllerFSM.ResultAdded(this.startingParticles, p)
     case Remove(id) =>
       log info "Remove: " + id
       this.workers foreach (_ ! WorkerActor.Remove(id))

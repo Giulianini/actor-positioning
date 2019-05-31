@@ -8,7 +8,6 @@ import it.unibo.pcd1819.actorpositioning.view.shapes.ShapeId
 import it.unibo.pcd1819.actorpositioning.view.utilities.{ParticleDrawingUtils, ViewUtilities}
 import it.unibo.pcd1819.actorpositioning.view.utilities.ViewUtilities._
 import javafx.application.Platform
-import javafx.application.Platform.runLater
 import javafx.fxml.FXML
 import javafx.scene.Scene
 import javafx.scene.layout.AnchorPane
@@ -17,11 +16,11 @@ import javafx.stage.Stage
 import scala.collection.mutable
 
 sealed trait ActorObserver {
+  def updateAdd(e: Seq[Particle], p: Particle, elapsed: Long): Unit
   def updateParticlesPositions(particles: Seq[Particle], elapsed: Long): Unit
   def updateRemove(e: Seq[Particle], removedId: Int, elapsed: Long): Unit
   def displayParticles(particles: Seq[Particle]): Unit
   def displayParticle(particle: Particle): Unit
-  def updateExecutionTime(millis: Long): Unit
   def setViewActorRef(actorRef: ActorRef): Unit
 }
 
@@ -80,7 +79,6 @@ protected final case class MainScreenView(private var defaultParticles: Int,
     })
   }
   def removeParticle(id: Int): Unit = {
-    log("Gui remove: " + id)
     this.getParticles.getChildren.remove(this.getParticles.getChildren.stream()
       .filter(p => p.asInstanceOf[ShapeId].id == id).findFirst().get())
     this.particleMap -= id
@@ -88,21 +86,17 @@ protected final case class MainScreenView(private var defaultParticles: Int,
   override def updateParticlesPositions(particles: Seq[Particle], elapsed: Long): Unit = {
     Platform.runLater(() => {
       particles.foreach(p => {
-        //if (this.particleMap.contains(p.id)) {
-        val shape = this.particleMap(p.id)
-        val posX: Double = (p.position.x / logicSize) * this.stack3D.getWidth * 0.5 + this.stack3D.getWidth * 0.5
-        val posY: Double = (p.position.y / logicSize) * this.stack3D.getHeight * 0.5 + this.stack3D.getHeight * 0.5
-        shape.setTranslateX(posX)
-        shape.setTranslateY(posY)
-        //} else {
-        //displayParticle(p)
-        //}
+        this.particleMap.get(p.id).foreach(shape => {
+          val posX: Double = (p.position.x / logicSize) * this.stack3D.getWidth * 0.5 + this.stack3D.getWidth * 0.5
+          val posY: Double = (p.position.y / logicSize) * this.stack3D.getHeight * 0.5 + this.stack3D.getHeight * 0.5
+          shape.setTranslateX(posX)
+          shape.setTranslateY(posY)
+        })
       })
     })
   }
   override def updateRemove(e: Seq[Particle], removedId: Int, elapsed: Long): Unit = Platform.runLater(() => this.removeParticle(removedId))
-
-  override def updateExecutionTime(elapsed: Long): Unit = runLater(() => labelExecutionTime.setText(elapsed + " "))
+  override def updateAdd(e: Seq[Particle], p: Particle, elapsed: Long): Unit = displayParticle(p)
 }
 
 object MainScreenView {
