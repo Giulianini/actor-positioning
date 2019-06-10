@@ -63,6 +63,7 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
     case Event(Result(e), Request(s, _)) => goto(Idle).using(Request(s, Result(e)))
     case Event(ResultRemoved(e, id), Request(s, _)) => goto(Idle).using(Request(s, ResultRemoved(e, id)))
     case Event(ResultAdded(e, id), Request(s, _)) => goto(Idle).using(Request(s, ResultAdded(e, id)))
+    case _ => goto(Pit)
   }
 
   when(Running) {
@@ -100,16 +101,16 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
   }
 
   onTransition {
-    case Pit -> Pit => log error "You are in the Pit"
-    case _ -> Pit => log error "This action brings to the Pit"
+    case Pit -> Pit => log info "You are in the Pit"
+    case _ -> Pit => log info "This action brings to the Pit"
 
     case Idle -> Idle =>
       nextStateData match {
         case Request(Settings(p, _, _), GenerateEnvironment) =>
-          log debug s"Idle asked to generate environment"
+          log info s"Idle asked to generate environment"
           environment ! EnvironmentActor.Generate(p, EnvironmentConstants.RADIUS)
         case Request(_, Add(x, y)) =>
-          log debug s"Idle asked for creation of $x, $y"
+          log info s"Idle asked for creation of $x, $y"
           environment ! EnvironmentActor.Add(x, y)
         case Request(_, Remove(p)) =>
           log info s"Idle asked for removal of $p"
@@ -129,18 +130,18 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
         case Request(_, UpdateIterations(n)) =>
           log debug s"Idle updated iterations with $n"
         case Request(_, NoInput) =>
-          log debug "Initializing FSM"
-        case _ => log error "Report this message ASAP"
+          log info "Initializing FSM"
+        case _ => log info "Report this message ASAP"
       }
     case Idle -> Running =>
-      log debug "Idle to Running"
+      log info "Idle to Running"
       startingTime = System.currentTimeMillis()
       environment ! EnvironmentActor.Start
       environment ! EnvironmentActor.Step
     case Idle -> Paused =>
       startingTime = System.currentTimeMillis()
       environment ! EnvironmentActor.Step
-      log debug "Idle to Paused"
+      log info "Idle to Paused"
 
     case Running -> Running =>
       nextStateData match {
@@ -177,13 +178,13 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
         case Request(Settings(_, i, _), Step) =>
           //log debug s"Remaining iterations: $i"
           environment ! EnvironmentActor.Step
-        case _ => log error "Report this message ASAP"
+        case _ => log info "Report this message ASAP"
       }
     case Running -> Idle =>
-      log debug "Running to Idle"
+      log info "Running to Idle"
       environment ! EnvironmentActor.Stop
     case Running -> Paused =>
-      log debug "Running to Paused"
+      log info "Running to Paused"
 
     case Paused -> Paused =>
       nextStateData match {
@@ -211,17 +212,17 @@ class ControllerFSM extends FSM[State, Data] with ActorLogging {
         case _ => log error "Report this message ASAP"
       }
     case Paused -> Idle =>
-      log debug "Paused to Idle"
+      log info "Paused to Idle"
       environment ! EnvironmentActor.Stop
     case Paused -> Running =>
-      log debug "Paused to Running"
+      log info "Paused to Running"
       environment ! EnvironmentActor.Step
   }
   initialize()
 }
 
 private object DefaultConstants {
-  val DEFAULT_PARTICLES: Int = 2
+  val DEFAULT_PARTICLES: Int = 20
   val DEFAULT_ITERATIONS: Int = 20000
   val DEFAULT_TIME_STEP: Int = 10
 }

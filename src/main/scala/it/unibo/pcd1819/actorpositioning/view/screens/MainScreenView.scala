@@ -69,7 +69,7 @@ protected final case class MainScreenView(private var defaultParticles: Int,
     })
   }
   override def displayParticle(particle: Particle): Unit = {
-    log("Gui display: " + particle.id)
+//    log("Gui display: " + particle.id)
     Platform.runLater(() => {
       val shape: ShapeId = ParticleDrawingUtils.createParticleShapes(particle, this.comboBoxShape.getSelectionModel.getSelectedItem,
         Vector2D(this.stack3D.getWidth, this.stack3D.getHeight), this.comboBoxOptimize.getSelectionModel.getSelectedIndex, this.logicSize, particle.id)

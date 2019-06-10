@@ -57,9 +57,9 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
     //                    case (ps, w) => w ! WorkerActor.SetBulk(ps)
     //                }
     case Stop =>
-      //            log debug "Stopping simulation..."
-      workers foreach context.stop
-      context unbecome()
+                  log debug "Stopping simulation..."
+//      workers foreach context.stop
+//      context unbecome()
     case Step => {
       //            log debug "Stepping simulation"
       this.workers foreach (_ ! WorkerActor.Step)

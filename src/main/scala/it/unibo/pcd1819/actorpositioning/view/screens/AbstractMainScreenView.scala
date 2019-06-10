@@ -104,6 +104,7 @@ protected abstract class AbstractMainScreenView(private var defaultParticles: In
       this.buttonStep setDisable false
       this.buttonCreateParticles setDisable false
       this.buttonStartPause setGraphic this.startIcon
+      this.buttonPopup setDisable false
       this.stopSimulation()
     })
     this.buttonStep.setOnAction(_ => {
