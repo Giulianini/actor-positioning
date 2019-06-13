@@ -33,37 +33,8 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
   private var discoveringLoads = false
 
   override def receive: Receive = {
-    //        case Start =>
-    //            log debug "Starting simulation..."
-    //            workers = 0 until processors map (_ => context actorOf WorkerActor.props(processors - 1))
-    //            workers foreach (_ ! WorkerActor.Start(this.timeStep))
-    //            val workerLoad = Math.ceil(this.startingParticles.size.toDouble / workers.size).toInt
-    //            log debug "load: " + workerLoad
-    //            log debug "workers: " + workers.size
-    //            this.startingParticles.indices
-    //                .zip(this.startingParticles)
-    //                .groupBy {
-    //                    case (i, _) => i / workerLoad
-    //                }
-    //                .map {
-    //                    case (i, l) => (i, l.map { case (_, p) => p })
-    //                }
-    //                .map {
-    //                    case (_, ps) => ps
-    //                }
-    //                .map(ps => {log debug "chunk size: " + ps.size ; ps})
-    //                .zip(this.workers)
-    //                .foreach {
-    //                    case (ps, w) => w ! WorkerActor.SetBulk(ps)
-    //                }
-    case Stop =>
-                  log debug "Stopping simulation..."
-//      workers foreach context.stop
-//      context unbecome()
-    case Step => {
-      //            log debug "Stepping simulation"
+    case Step =>
       this.workers foreach (_ ! WorkerActor.Step)
-    }
     case Generate(n, range) =>
       particleFactory ! ParticleFactoryActor.GenerateRandomParticles(n, range)
     case Add(x, y) =>
@@ -104,7 +75,6 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
             case ParticleFactoryActor.NewParticle(p) =>
               AddToWorker(p, this.minimumLoadActor)
             case _ =>
-              log debug "asjdkl"
           } pipeTo self
 
           unstashAll()
@@ -120,7 +90,6 @@ class EnvironmentActor extends Actor with ActorLogging with Stash {
       this.startingParticles = this.startingParticles.filter(_.id != id)
       context.parent ! ControllerFSM.ResultRemoved(this.startingParticles, id)
     case ParticleFactoryActor.NewParticles(ps) =>
-      //            log debug "Received particles"
       this.startingParticles = ps
       val workerLoad = Math.ceil(this.startingParticles.size.toDouble / workers.size).toInt
       log debug "load: " + workerLoad
